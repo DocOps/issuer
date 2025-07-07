@@ -1,0 +1,5 @@
+= Issuer
+
+A Ruby gem for managing GitHub issues programmatically.
+
+See the link:../../tree/0.1.0[0.1.0 release branch] for the full implementation.
