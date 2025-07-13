@@ -12,6 +12,7 @@ jobs:
   vale-linting:
     name: Vale Documentation Linting
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
     - name: Checkout code
@@ -23,7 +24,7 @@ jobs:
         # Version of Vale to use
         version: '3.12.0'
         # Files to lint (supports glob patterns)
-        files: '["*.md", "*.adoc", "docs/**/*.md", "docs/**/*.adoc", "lib/examples/**/*.md"]'
+        files: '["*.adoc", "docs/**/*.adoc", "specs/tests/*.adoc"]'
         # Vale configuration file
         config: .vale.ini
         # Upload results as annotations
@@ -37,6 +38,7 @@ jobs:
   documentation-tests:
     name: Documentation Build Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
     - name: Checkout code
