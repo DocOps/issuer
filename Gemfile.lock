@@ -11,6 +11,7 @@ GEM
   specs:
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
+    asciidoctor (2.0.23)
     base64 (0.3.0)
     diff-lcs (1.6.2)
     faraday (2.13.2)
@@ -54,6 +55,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  asciidoctor (~> 2.0)
   bundler (~> 2.0)
   issuer!
   rake (~> 13.0)

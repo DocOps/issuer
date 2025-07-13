@@ -457,6 +457,9 @@ From the project root:
 
 [source,bash]
 ----
+# Run all PR tests locally (same as GitHub Actions)
+bundle exec rake pr_test
+
 # Run all tests (recommended)
 bundle exec rake spec
 
@@ -469,6 +472,17 @@ bundle exec rspec specs/tests/rspec/cli_spec.rb
 # Run tests matching a pattern
 bundle exec rspec --pattern "*ops*"
 ----
+
+===== PR Test Suite
+
+The `pr_test` task runs the exact same tests that GitHub Actions runs for pull requests:
+
+* **RSpec Tests**: All unit tests (`bundle exec rake spec`)
+* **CLI Tests**: Command-line interface functionality tests
+* **YAML Validation**: Validates all example YAML files
+* **Documentation Quality**: Vale linting on all documentation files
+
+This ensures you can validate your changes locally before pushing to GitHub.
 
 ==== Test Organization
 
