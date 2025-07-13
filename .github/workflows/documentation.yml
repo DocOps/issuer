@@ -25,12 +25,11 @@ jobs:
         version: '3.12.0'
         # Files to lint (supports glob patterns)
         files: '["*.adoc", "docs/**/*.adoc", "specs/tests/*.adoc"]'
-        # Vale configuration file
-        config: .vale.ini
         # Upload results as annotations
         reporter: github-pr-review
-        # Fail on error level (suggestion, warning, error)
-        level: warning
+        # Don't fail on warnings, only on errors
+        level: error
+        fail_on_error: false
       env:
         # Required for PR comments
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

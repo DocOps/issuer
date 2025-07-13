@@ -35,10 +35,10 @@ jobs:
     
     - name: Run CLI tests
       run: |
-        # Test basic CLI functionality
-        ruby -Ilib exe/issuer --version
-        ruby -Ilib exe/issuer --help
-        ruby -Ilib exe/issuer examples/minimal-example.yml --dry
+        # Test basic CLI functionality with bundler context
+        bundle exec ruby -Ilib exe/issuer --version
+        bundle exec ruby -Ilib exe/issuer --help
+        bundle exec ruby -Ilib exe/issuer examples/minimal-example.yml --dry
 
   gem-build:
     runs-on: ubuntu-latest
