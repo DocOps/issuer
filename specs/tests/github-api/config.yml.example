@@ -1,0 +1,17 @@
+# GitHub API Test Configuration
+# Copy this file to config.yml and customize for your test repository
+
+# Test repository configuration
+test_repo: "your-username/issuer-test-repo"  # Replace with your test repository
+test_username: "your-username"               # Replace with your GitHub username
+
+# Test configuration
+cleanup_after_tests: true                   # Whether to clean up test issues after running
+max_test_issues: 50                          # Maximum number of test issues to create
+test_label_prefix: "test-"                   # Prefix for test labels
+test_milestone_prefix: "test-milestone-"     # Prefix for test milestones
+
+# Advanced options
+dry_run_first: true                          # Always do a dry run before actual posting
+create_cleanup_script: true                  # Generate cleanup script after tests
+verbose_output: true                         # Show detailed output during tests

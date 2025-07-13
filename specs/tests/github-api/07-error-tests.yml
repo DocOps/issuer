@@ -1,0 +1,29 @@
+$meta:
+  proj: nonexistent/repository  # This should fail - testing error handling
+  
+issues:
+  - summ: "[TEST] This should fail gracefully"
+    body: |
+      # Error Handling Test
+      
+      This issue should **NOT** be created successfully because the repository doesn't exist.
+      
+      **What this tests:**
+      - Error handling for invalid repository names
+      - Graceful failure with informative error messages
+      - No crashes or unexpected behavior
+      
+      **Expected behavior:**
+      - The CLI should detect that the repository doesn't exist
+      - A clear error message should be displayed
+      - The program should exit gracefully without creating any issues
+      - No partial state should be left behind
+      
+      **Test commands:**
+      ```bash
+      # This should fail with a clear error message
+      issuer 07-error-tests.yml --dry    # Should fail even in dry-run
+      issuer 07-error-tests.yml          # Should fail with repository error
+      ```
+      
+      If you're seeing this issue in GitHub, something went wrong with the test!

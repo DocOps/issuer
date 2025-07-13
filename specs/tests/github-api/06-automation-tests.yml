@@ -1,0 +1,102 @@
+$meta:
+  proj: DocOps/issuer-test              # Test repository  # Update this with your test repository
+  
+issues:
+  - summ: "[TEST] Auto-metadata flag test"
+    body: |
+      # Automation Flag Test
+      
+      This issue tests the `--auto-metadata` flag functionality.
+      
+      **What this tests:**
+      - Automatic milestone creation without user prompts
+      - Automatic label creation without user prompts  
+      - Combined automation of both milestones and labels
+      
+      **Expected behavior when run with `--auto-metadata`:**
+      1. A new milestone "auto-test-milestone-v1.0" should be created automatically
+      2. New labels should be created automatically without prompts
+      3. No interactive confirmations should appear
+      4. The issue should be created with all metadata properly assigned
+      
+      **Test commands:**
+      ```bash
+      # This should prompt for milestone/label creation
+      issuer 06-automation-tests.yml
+      
+      # This should create everything automatically without prompts
+      issuer 06-automation-tests.yml --auto-metadata
+      
+      # Individual automation flags
+      issuer 06-automation-tests.yml --auto-versions --auto-tags
+      issuer 06-automation-tests.yml --auto-milestones --auto-labels
+      ```
+      
+      **Expected milestones/labels created:**
+      - Milestone: auto-test-milestone-v1.0
+      - Labels: auto-test-label-1, auto-test-label-2
+    vrsn: auto-test-milestone-v1.0
+    tags: [auto-test-label-1, auto-test-label-2]
+    
+  - summ: "[TEST] Individual automation flags test"
+    body: |
+      # Individual Automation Flags Test
+      
+      This issue tests the individual automation flags:
+      - `--auto-versions` / `--auto-milestones`
+      - `--auto-tags` / `--auto-labels`
+      
+      **Test scenarios:**
+      
+      1. **Only milestone automation:**
+         ```bash
+         issuer 06-automation-tests.yml --auto-versions
+         ```
+         Should create milestone automatically but prompt for labels.
+      
+      2. **Only label automation:**
+         ```bash
+         issuer 06-automation-tests.yml --auto-tags  
+         ```
+         Should create labels automatically but prompt for milestone.
+      
+      3. **Both flags together:**
+         ```bash
+         issuer 06-automation-tests.yml --auto-versions --auto-tags
+         ```
+         Should work the same as `--auto-metadata`.
+      
+      **Expected resources:**
+      - Milestone: individual-test-milestone-v2.0
+      - Labels: individual-test-label-1, individual-test-label-2
+    vrsn: individual-test-milestone-v2.0
+    tags: [individual-test-label-1, individual-test-label-2]
+    
+  - summ: "[TEST] Alias flag compatibility test"
+    body: |
+      # Alias Flag Compatibility Test
+      
+      This issue tests that the alias flags work correctly:
+      
+      **Milestone aliases:**
+      - `--auto-versions` (primary)
+      - `--auto-milestones` (alias)
+      
+      **Label aliases:**
+      - `--auto-tags` (primary) 
+      - `--auto-labels` (alias)
+      
+      **Test commands that should work identically:**
+      ```bash
+      issuer 06-automation-tests.yml --auto-versions --auto-tags
+      issuer 06-automation-tests.yml --auto-milestones --auto-labels  
+      issuer 06-automation-tests.yml --auto-metadata
+      ```
+      
+      All three commands should produce the same result with no user prompts.
+      
+      **Expected resources:**
+      - Milestone: alias-test-milestone-v3.0
+      - Labels: alias-test-label-1, alias-test-label-2
+    vrsn: alias-test-milestone-v3.0
+    tags: [alias-test-label-1, alias-test-label-2]

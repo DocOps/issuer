@@ -1,0 +1,55 @@
+$meta:
+  proj: DocOps/issuer-test              # Test repository  # Update this with your test repository
+  
+issues:
+  - summ: "[TEST] Self-assigned issue"
+    body: |
+      # Assignment Test
+      
+      This issue tests the user assignment functionality.
+      
+      **What this tests:**
+      - Assigning an issue to a specific user
+      - User validation (the user must have access to the repository)
+      - Assignment display in the GitHub interface
+      
+      **Expected behavior:**
+      - This issue should be assigned to the repository owner/collaborator
+      - The assignee should appear in the GitHub Issues interface
+      - The assignee should receive notifications (if configured)
+      
+      **Important:** Make sure to update the `user` field below with a valid GitHub username that has access to the test repository.
+      
+      **Test commands:**
+      ```bash
+      issuer 05-assignment-tests.yml --dry  # Check assignment before posting
+      issuer 05-assignment-tests.yml        # Create with assignment
+      ```
+    user: briandominick               # GitHub username  # Update this with a valid GitHub username
+    
+  - summ: "[TEST] Issue with default assignee"
+    body: |
+      # Default Assignee Test
+      
+      This issue tests using a default assignee specified in metadata defaults.
+      
+      **Expected behavior:**
+      - Should be assigned to the same user as specified in defaults
+      - Tests the inheritance of user assignment from metadata
+      
+      Note: This test requires setting a default user in the metadata section.
+    # This issue will use the default user from $meta.defaults if specified
+    
+  - summ: "[TEST] Unassigned issue"
+    body: |
+      # Unassigned Issue Test
+      
+      This issue should remain unassigned to test that:
+      
+      - Issues without explicit or default assignees work correctly
+      - The assignment field is properly omitted from the API call
+      - No errors occur when no assignee is specified
+      
+      **Expected behavior:**
+      - This issue should appear with no assignee in GitHub
+      - No assignment-related errors should occur during creation

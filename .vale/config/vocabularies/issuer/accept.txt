@@ -1,0 +1,63 @@
+# Project-specific vocabulary for issuer
+# These terms are accepted and won't be flagged by spell checkers
+
+# Project name and variations
+issuer
+Issuer
+IMYML
+imyml
+
+# Technical terms
+GitHub
+GitLab
+Octokit
+AsciiDoc
+asciidoc
+YAML
+JSON
+APIs
+API
+CLI
+summ
+vrsn
+proj
+metadata
+milestones
+assignee
+repos
+repo
+
+# Common tech abbreviations
+dev
+config
+async
+auth
+env
+vars
+bool
+bool
+bool
+timestamp
+username
+workflow
+workflows
+
+# Ruby/gem specific
+Gemfile
+gemspec
+rspec
+RSpec
+bundler
+Bundler
+
+# Docker terms
+dockerfile
+Dockerfile
+DocOps
+docopslab
+
+# Proper nouns
+JIRA
+OAuth
+README
+roadmap

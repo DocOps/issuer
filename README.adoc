@@ -1,5 +1,523 @@
-= Issuer
+= Issuer: Bulk GitHub Issue Creator
+:toc: macro
+:toclevels: 3
+:docker_base_command: docker run -it --rm -v $(pwd):/workdir -e GITHUB_TOKEN=$ISSUER_API_TOKEN docopslab/issuer
+:append_or_impose: Prepend items with `+` to indicate they should be appended to existing labels. Items without `+` will only be used for issues with no `tags` designated.
+ifdef::env-github[]
+:icons: font
+endif::[]
 
-A Ruby gem for managing GitHub issues programmatically.
 
-See the link:../../tree/0.1.0[0.1.0 release branch] for the full implementation.
+== Overview
+
+_Issuer_ lets you define all your work tickets in one place as YAML, apply defaults, and post them to GitHub Issues in bulk.
+
+=== Features
+
+* *Bulk issue creation* from a single YAML file
+* *Dry-run mode* for testing without creating issues
+* *Automatic milestone creation* if milestones don't exist
+* *Configurable defaults* and label application
+* *Environment variable support* for authentication
+* *Issue validation* with helpful error messages
+* *GitHub API integration* via Octokit
+
+Future plans include extending this capability to *JIRA*, *GitLab* Issues, GitHub *Projects*, and other services.
+
+toc::[]
+
+
+== Installation
+
+For end users, there are two ways to execute `issuer`.
+If you do not already operate in a Ruby environment, the Docker approach is recommended.
+
+=== For Non-Ruby Users
+
+If you are not already a Ruby user, the `issuer` utility may be best used from our Docker image.
+
+[NOTE]
+You will need *Docker Desktop* installed https://docs.docker.com/desktop/setup/install/mac-install/[directly on MacOS] or https://docs.docker.com/desktop/features/wsl/[with WSL2 backend on Windows], but all instructions here work in the _terminal_.
+For Linux, use the https://docs.docker.com/engine/install/[Docker Engine install docs] if you're not already using Docker.
+
+With Docker installed and running...
+
+. Download the Docker image.
++
+[.prompt]
+ docker pull docopslab/issuer
+
+. Run the `issuer` command via a container based on the Docker image.
++
+[.prompt,subs=+attributes]
+ {docker_base_command} --version
+
+For actual issue creation, use something like:
+
+[.prompt,subs=+attributes]
+ {docker_base_command} your-issues.yml --dry
+
+The above command:
+
+* mounts your local directory to be readable by the Docker container
+* passes your GitHub access token environment variable into the container (`$ISSUER_API_TOKEN` could be `$ISSER_GITHUB_TOKEN`, `$GITHUB_ACCESS_TOKEN`, or `$GITHUB_TOKEN`).
+
+Everything after `docopslab/issuer` accepts the standard arguments and options of the issuer CLI.
+
+[[docker-alias]]
+==== Alias the Docker Command
+
+Optionally alias the base Docker command.
+In your shell configuration (usually `~/.bashrc` or `~/.zshrc), add the following:
+
+[.prompt,subs=+attributes]
+ alias issuer='{docker_base_command}'
+
+Reload your shell configuration for the alias to take effect:
+
+[.prompt]
+ source ~/.bashrc
+
+=== For Ruby Users
+
+If you have Ruby on your workstation, there are two common ways to install thi gem.
+
+==== Global Installation
+
+[.prompt]
+ gem install issuer
+
+Then you can use the `issuer` command from anywhere in your system.
+
+==== Local/Applicaition Installation
+
+Add this line to your Gemfile:
+
+[source,ruby]
+----
+gem 'issuer'
+----
+
+And then execute:
+
+ bundle install
+
+Now you can use `bundle exec issuer` to perform operations inside the project directory.
+
+
+== Usage
+
+Once installed, you can start using `issuer` to create issues in GitHub.
+
+=== Quickstart Overview
+
+The following steps assume the gem is either installed globally or `issuer` is <<docker-alias,established as an alias>>.
+For Ruby Bundler usage, prepend `bundle exec ` and for un-aliased Docker usage, prepend `{docker_base_command}`.
+
+. Prepare your issue definitions in an IMYML file (see <<imyml-format,examples and docs>> below).
+
+. Perform a "`dry run`" to validate your file and check what would be posted (no GitHub API calls made):
++
+ issuer example.yml --dry
+
+. Establish a Personal Access Token for GitHub (see <<authentication,Authentication>> below).
+
+. Post issues to GitHub:
++
+[.prompt]
+ issuer example.yml
+
+[[imyml-format]]
+=== IMYML File Format
+
+The specially formatted configuration files are structured as _IMYML_, for Issue Management YAML-based Modeling Format.
+
+The YAML file must have the following structure:
+
+[source,yaml]
+----
+$meta: # optional block for establishing general modes/settings
+  proj: org/repo
+  defaults: # value to infer when given property missing
+    vrsn: 0.1.0 # milestone/version
+    user: alice # assigned user
+    tags: [needs_labels,+posted_by_issuer] # labels
+    stub: true # whether to auto-insert stub texts
+    head: | # header stub text to prepend when indicated
+      Below the next line is the body...
+      ---
+    tail: | # footer stub text to append when indicated
+      ---
+      This issue was automatically generated by issuer. 
+    body: | # body text to impose when no body provided
+      This is the default text that will appear if an issue record is a _stub_ and no `body` field is designated. 
+issues: # block for listing issues to post to cloud
+  - summ: Issue title # title/summary field
+    body: | # description/body field
+      Markdown-formatted description.
+    tags: [label1, 'component:api'] # labels to create/assign
+    user: someusername # assigned username
+    stub: false
+  - summ: Another issue
+    vrsn: 0.2.0 # milestone
+    # this issue record's body will be:
+    # Below the next line is the body...
+    # ---
+    # This is the default text that will appear if an issue record is a _stub_ and no `body` field is designated.
+    # ---
+    # This issue was automatically generated by issuer. 
+----
+
+The `$meta` block is entirely optional, but if it is absent, your `issuer` command will need a `--proj` flag to designate the GitHub repo to which your issues should post.
+
+Only the `summ` property is required for each issue record, and issue records (Array items) that are simple strings that will be treated as summary-only.
+Therefore, the following example would yield 3 tickets with unique summaries and the same body, based on `$meta.defaults.body`.
+
+[source,yaml]
+----
+$meta:
+  defaults:
+    body: |
+      This is a placeholder text until someone is assigned this ticket.
+    stub: true
+issues:
+  - summ: Fill out issue bodies and add labels/milestones
+    body: |
+      The rest of the tickets in this project are not filled out.
+    tags: ['priority:high']
+  - Make a README.adoc file
+  - Add a license to the repo
+----
+
+[TIP]
+This repository contains numerous link:lib/examples/README.adoc[example files] to use for inspiration.
+
+The IMYML format will be standardized and formally specified in a future release of _issuer_, but it will remain an _open standard_ adoptable by anyone who wants to exploit or extend it.
+
+[[imyml-ref]]
+==== IMYML Properties Reference
+
+`$meta`::
+Optional block for establishing operation-wide modes and settings.
+
+`$meta.proj`:::
+(String)
+Designates the target project/repository.
+
+`$meta.defaults`:::
+Designates the default values to use for any issue record that does not specify a value for a given property.
+
+`$meta.defaults.vrsn`::::
+(String)
+Sets default version or milestone for all issues.
+
+`$meta.defaults.user`::::
+(String)
+Sets default assignee (GitHub username).
+
+`$meta.defaults.tags`::::
+(Array):
+Labels to append to issues (comma-separated).
+{append_or_impose}
+
+`$meta.defaults.stub`::::
+(Boolean)
+Establishes the state whether to insert stub texts (`body` / `head` / `tail`).
+
+`$meta.defaults.body`::::
+(String)
+Sets default body text to apply to all issues when no `body` property is specified in the issue record.
+
+`$meta.defaults.head`::::
+(String)
+Sets default text to insert before the body of all issues for which `stub`.
+
+`$meta.defaults.tail`::::
+(String)
+Sets default text to insert after the body of all issues for which `stub`.
+
+`issues`::
+(Array) Tabular listing of issue records as Array itmes.
+If an item is Scalar (not a Map with named keys), the value must be a String and it will be treated as the `summ` (summary/title) property.
++
+Otherwise, any `issues` Array items must be Map-formatted "`dictionaries`" with the following properties:
+
+`summ`:::
+(String, *required*)
+A one-line title or summary of the issue.
+
+`body`:::
+(String)
+The main body or description text for the issue.
+Defaults to `$meta.defaults.body` if `stub == true` for the record, in which case, upon submission, will also incorporate any values for `$meta.defaults.head` and `$meta.defaults.tail`.
+
+`vrsn`:::
+(String)
+The milestone associated with the issue.
++
+Defaults to `$meta.defaults.vrsn` or else `null`.
+
+`tags`:::
+(Array of Strings)
+A listing of specific labels to assign to the issue.
+
+`user`:::
+(String)
+The system username of the person or bot to which the ticket is assigned.
+
+`stub [true+++*+++|false]`:::
+(Boolean)
+Whether to treat the issue as a stub entry, meaning prepend any `$meta.defaults.head` text or append any `$meta.defaults.tail` text, and in case the ticket has no `body` property, insert the text of `$meta.defaults.body`.
+
+[[cli-usage]]
+=== CLI Usage
+
+ issuer [IMYML_FILE] [options]
+
+==== IMYML File Path Argument
+
+A source IMYML file is required and can be specified in two ways:
+
+* *Positional argument* (most common): Place the file path immediately after `issuer`
+* *Named option*: Use the `--file` option flag to specify the file path
+
+Examples:
+
+....
+issuer my-issues.yml --proj acmeco/widget1 --dry
+issuer --proj acmeco/widget1 --file my-issues.yml --dry
+....
+
+==== File and Meta Override Options
+
+These options specify the source file and override any corresponding `$meta.defaults` properties.
+
+--file _IMYML_FILE_::
+IMYML file path (alternative to positional argument).
+
+--proj _ORG/REPO_::
+The target project (org/repo or user/repo format for GitHub).
+
+--vrsn _VERSION_::
+Argues default milestone for all issues.
+
+--user _USERNAME_::
+Argues default assignee (GitHub username).
+
+--tags _TAG_[,_TAG_]::
+Argues labels to impose or add issues (comma-separated).
+{append_or_impose}
+
+--stub [_true_+++*+++|_false_]::
+Whether to treat all issues as stubs, meaning prepend any `$meta.defaults.head` text or append any `$meta.defaults.tail` text, and in case the ticket has no `body` property, insert the text of `$meta.defaults.body`.
+
+==== Mode Options
+
+--dry::
+Dry-run: print actions but do not post to GitHub.
+
+--auto-versions, --auto-milestones::
+Automatically create missing milestones/versions without prompting for confirmation.
+
+--auto-tags, --auto-labels::
+Automatically create missing labels/tags without prompting for confirmation.
+
+--auto-metadata::
+Automatically create all missing metadata (milestones and labels) without prompting for confirmation. Equivalent to using both `--auto-versions` and `--auto-tags`.
+
+--help::
+Prints the usage screen.
+
+--version::
+Prints the version of `issuer`.
+
+[[authentication]]
+=== Authentication
+
+GitHub authentication requires a valid personal access token.
+
+The application will check for environment variables in the following order:
+
+. `ISSUER_API_TOKEN`
+. `ISSUER_GITHUB_TOKEN`
+. `GITHUB_ACCESS_TOKEN`
+. `GITHUB_TOKEN`
+
+To *create and set a token*:
+
+. In the GitHub Web interface, go to *Settings* (under your user icon) → *Developer Settings* (bottom of left menu) → *Personal Access Tokens* → *Fine-grained tokens*.
+. Generate a new token with access to *All repositoriess* or any *Select repositories* you wish to post to, and include read/write permissions GitHub Issues (under *Repository permissions*).
+. Copy the token and set it as an environment variable.
++
+.Example
+ export ISSUER_API_TOKEN=github_pat_xxxxxxxxxxxxxxxxxxxxxxxx
++
+Where `github_pat_xxxxxxxxxxxxxxxxxxxxxxxx` is your actual token.
+
+
+== Advanced Usage
+
+=== Logging
+
+Issuer automatically logs all API operations for tracking and potential cleanup.
+
+==== Log Storage Location
+
+By default, logs are stored in a user-wide directory:
+
+* *Linux/macOS*: `~/.config/issuer/logs/`
+* *With XDG Base Directory*: `$XDG_CONFIG_HOME/issuer/logs/`
+* *Custom location*: Set `ISSUER_CONFIG_DIR` environment variable
+
+Example:
+[source,bash]
+----
+# Use custom config directory
+export ISSUER_CONFIG_DIR="~/path/to/my/issuer/config"
+issuer my-issues.yml
+
+# Logs will be stored in: ~/path/to/my/issuer/config/logs/
+----
+
+==== Log Management
+
+Use the management script to view and manage your run logs.
+
+For now, you will need to *clone the DocOps/issuer repo* in order to work with the run-logs manager.
+
+[source,bash]
+----
+# List all runs
+ruby scripts/manage-runs.rb list
+
+# Show details for a specific run
+ruby scripts/manage-runs.rb show run_20250711_143022_abcd
+
+# Clean up all logs (use with caution)
+ruby scripts/manage-runs.rb clean-logs
+----
+
+Each run creates a detailed log with:
+
+* All created issues, milestones, and labels
+* URLs for easy access
+* Run metadata and status
+* Error information if the run failed
+
+[NOTE]
+It is typically safe to delete logs once you are satisfied with your posted issues.
+Logs are simply kept for easy reversal of mis-postings.
+
+
+== Development
+
+I developed the 0.1.0 version of this application after trying to use GitHub Copilot to automatically bulk-create issue tickets, which it promises to be able to do but failed me pretty hard at it.
+
+That facility seems like a perfectly inappropriate use of generative AI.
+It accepted my plan request and pre-drafted ticket content, but then it wanted me to manually add labels and milestones to them, as well as manually click *create* on each one -- even though I had already taken the time to plan and instruct the milestones and labels and the contents were fullly prepared.
+
+Additionally, I find myself using different issue-management systems (JIRA, GitLab Issues, etc), so I wanted a more platform-agnostic way to handle this problem.
+With that in mind, I have left the Ruby API and the IMYML model fairly "`generic`" for extensibility.
+I will probably adapt the API to other systems in future releases, and I welcome <<contributing,contributions>> to that effect.
+
+=== Methodology Confession
+
+I should note up front that this is the closest I have come to "`vibe coding`" anything bigger than a local script, let alone a shippable production code.
+Nevertheless, I intervened to make substantial and specific changes at least 100 times, and I rearranged major aspects of the codebase.
+
+I designed the IMYML format and the CLI up front, then I let Claud 4 (via GH Copilot) draft most of the code.
+It committed lots of rookie mistakes during this process, and it even confessed to "`cargo-cult programming`" when I pointed out it was introduing some anti-patterns.
+
+In the end, the only thing that is mainly untouched by me are the rspec tests, which I will more fully examine and approve before any 1.0 release, but for now they'll have to do.
+
+This also explains why the terminal output contains emojis.
+I will probably make those togglable or configurable in the future.
+
+=== Tests
+
+The `specs/` directory contains all specifications, requirements, and tests for the Issuer CLI tool.
+
+==== Directory Structure
+
+[source,tree]
+----
+specs/
+├── tests/
+    ├── rspec/
+        ├── spec_helper.rb
+        ├── cli_spec.rb
+        ├── issue_spec.rb
+        ├── ops_spec.rb
+        └── issuer_spec.rb
+----
+
+==== Running Tests
+
+From the project root:
+
+[source,bash]
+----
+# Run all tests (recommended)
+bundle exec rake spec
+
+# Run all tests directly with RSpec  
+bundle exec rspec
+
+# Run specific test file
+bundle exec rspec specs/tests/rspec/cli_spec.rb
+
+# Run tests matching a pattern
+bundle exec rspec --pattern "*ops*"
+----
+
+==== Test Organization
+
+RSpec Tests::
+(`specs/tests/rspec/`): Executable tests that validate the gem functionality
+
+GitHub API Integration Tests::
+(`specs/tests/github-api/`): Comprehensive end-to-end tests for GitHub API integration
+
+Test Data::
+(`specs/tests/data/`): YAML files, fixtures, and other test assets
+
+Future::
+Natural language specifications, API schemas, requirement documents
+
+==== GitHub API Integration Testing
+
+For comprehensive GitHub API testing, see link:specs/tests/README.adoc[the GitHub API test suite documentation].
+
+Quick start for API integration testing:
+
+[source,bash]
+----
+# Check GitHub connectivity
+./specs/tests/check-github-connectivity.sh
+
+# Run full GitHub API integration test suite
+./specs/tests/run-github-api-tests.sh
+
+# Run with specific options
+./specs/tests/run-github-api-tests.sh --verbose --auto-cleanup
+----
+
+The GitHub API test suite validates:
+
+* Authentication and connectivity
+* Issue creation with various configurations  
+* Milestone/version management and automation
+* Label/tag management and automation
+* Assignment functionality
+* Automation flags (`--auto-metadata`, `--auto-versions`, etc.)
+* Error handling and edge cases
+
+[[contributing]]
+=== Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/DocOps/issuer.
+
+== Legal
+
+The gem is available as open source under the terms of the MIT License.
+

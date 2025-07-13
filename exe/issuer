@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require "issuer"
+
+Issuer::CLI.start(ARGV)

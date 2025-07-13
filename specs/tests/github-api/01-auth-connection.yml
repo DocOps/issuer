@@ -1,0 +1,21 @@
+$meta:
+  proj: DocOps/issuer-test  # Test repository
+  
+issues:
+  - summ: "[TEST] Authentication verification"
+    body: |
+      # Authentication Test Issue
+      
+      This issue verifies that the issuer CLI can successfully:
+      
+      - ✅ Detect GitHub authentication token
+      - ✅ Connect to GitHub API  
+      - ✅ Access the target repository
+      - ✅ Create issues via API
+      
+      **Test Details:**
+      - Created via: issuer CLI
+      - Test type: Authentication & basic connectivity
+      - Expected outcome: This issue should be created successfully
+      
+      If you can see this issue, the basic authentication and API connection is working! 🎉
