@@ -1,6 +1,8 @@
+require_relative 'lib/issuer/version'
+
 Gem::Specification.new do |spec|
   spec.name          = "issuer"
-  spec.version       = File.read(File.join(__dir__, 'lib/issuer/version.rb')).match(/VERSION = ["']([^"']+)["']/)[1]
+  spec.version       = Issuer::VERSION
   spec.authors       = ["DocOps Lab"]
   spec.email         = ["codewriter@protonmail.com"]
 

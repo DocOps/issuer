@@ -1,6 +1,8 @@
 = Issuer: Bulk GitHub Issue Creator
 :toc: macro
 :toclevels: 3
+:this_prod_vrsn: 0.1.0
+:next_prod_vrsn: 0.2.0
 :docker_base_command: docker run -it --rm -v $(pwd):/workdir -e GITHUB_TOKEN=$ISSUER_API_TOKEN docopslab/issuer
 :append_or_impose: Prepend items with `+` to indicate they should be appended to existing labels. Items without `+` will only be used for issues with no `tags` designated.
 ifdef::env-github[]
