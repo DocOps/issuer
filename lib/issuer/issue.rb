@@ -61,14 +61,19 @@ module Issuer
     #
     def initialize issue_data, defaults={}
       @raw_data = issue_data || {}
-      @merged_data = defaults.merge(@raw_data)
-
-      @summ = @merged_data['summ']
-      @body = @merged_data['body'] || @merged_data['desc'] || '' # Support both body and desc (legacy)
-      @tags = Array(@merged_data['tags'])
-      @user = @merged_data['user']
-      @vrsn = @merged_data['vrsn']
-      @stub = @merged_data['stub']
+      @defaults = defaults
+      
+      # For most fields, issue data overrides defaults
+      @summ = @raw_data['summ'] || defaults['summ']
+      @body = @raw_data['body'] || @raw_data['desc'] || defaults['body'] || defaults['desc'] || '' # Support both body and desc (legacy)
+      @user = @raw_data['user'] || defaults['user']
+      @vrsn = @raw_data['vrsn'] || defaults['vrsn']
+      @stub = @raw_data.key?('stub') ? @raw_data['stub'] : defaults['stub']
+      
+      # For tags, we need special handling - combine defaults and issue tags for later processing
+      defaults_tags = Array(defaults['tags'])
+      issue_tags = Array(@raw_data['tags'])
+      @tags = defaults_tags + issue_tags
     end
 
     ##
@@ -182,14 +187,22 @@ module Issuer
         end
       end
 
-      # Start with append tags (always applied)
-      final_tags = append_tags + cli_append_tags
+      # Start with append tags from both defaults and CLI (always applied)
+      defaults_append_tags = Array(@defaults['tags']).select { |tag| tag.to_s.start_with?('+') }.map { |tag| tag[1..] }
+      final_tags = append_tags + defaults_append_tags + cli_append_tags
 
-      # Add regular tags if the issue has them, otherwise add CLI default tags
-      if !regular_tags.empty?
-        final_tags.concat(regular_tags)
+      # For regular tags, add issue's own tags, otherwise use default tags
+      issue_regular_tags = Array(@raw_data['tags']).reject { |tag| tag.to_s.start_with?('+') }
+
+      if !issue_regular_tags.empty?
+        # Issue has its own regular tags, use them
+        final_tags.concat(issue_regular_tags)
       else
+        # Issue has no regular tags, use defaults from CLI
         final_tags.concat(cli_default_tags)
+        # Also add non-append defaults tags
+        defaults_regular_tags = Array(@defaults['tags']).reject { |tag| tag.to_s.start_with?('+') }
+        final_tags.concat(defaults_regular_tags)
       end
 
       # Set the final tags (removing duplicates)

@@ -8,6 +8,8 @@ module Issuer
     class GitHub < Base
       def initialize token: nil, token_env_var: nil
         @token = token || self.class.detect_github_token(custom_env_var: token_env_var)
+        @milestone_cache = {}  # Cache for milestones by project
+        @label_cache = {}      # Cache for labels by project
 
         # Skip authentication validation for dry-run mode
         if @token == 'dry-run-token'
@@ -71,8 +73,14 @@ module Issuer
 
         # Handle milestone - only if milestone exists
         if issue_params[:milestone]
-          milestone = find_milestone(proj, issue_params[:milestone])
-          params[:milestone] = milestone.number if milestone
+          # If milestone is already a number (from convert_issue_to_site_params), use it directly
+          if issue_params[:milestone].is_a?(Integer)
+            params[:milestone] = issue_params[:milestone]
+          else
+            # If it's a string name, look it up
+            milestone = find_milestone(proj, issue_params[:milestone])
+            params[:milestone] = milestone.number if milestone
+          end
         end
 
         created_issue = @client.create_issue(proj, params[:title], params[:body], params)
@@ -109,6 +117,10 @@ module Issuer
 
         # Call create_milestone with proper parameters
         created_milestone = @client.create_milestone(proj, version_name, description: description)
+
+        # Add the newly created milestone to our cache for immediate availability
+        @milestone_cache[proj] ||= []
+        @milestone_cache[proj] << created_milestone
 
         # Return tracking data
         {
@@ -179,7 +191,7 @@ module Issuer
       end
 
       # Convert IMYML issue to GitHub-specific parameters
-      def convert_issue_to_site_params issue, proj, dry_run: false
+      def convert_issue_to_site_params issue, proj, dry_run: false, post_validation: false
         params = {
           title: issue.summ,
           body: issue.body || ''
@@ -203,7 +215,13 @@ module Issuer
           else
             # In normal mode, resolve milestone name to number
             milestone = find_milestone(proj, issue.vrsn)
-            params[:milestone] = milestone.number if milestone
+            if milestone
+              params[:milestone] = milestone.number
+            elsif post_validation
+              # If we're in post-validation mode and milestone still not found,
+              # this indicates a serious problem with the validation flow
+              puts "⚠️  Warning: Milestone '#{issue.vrsn}' not found even after validation for issue '#{issue.summ}'"
+            end
           end
         end
 
@@ -240,6 +258,13 @@ module Issuer
       end
 
       def find_milestone proj, milestone_name
+        # First check newly created milestones in cache
+        if @milestone_cache[proj]
+          cached_milestone = @milestone_cache[proj].find { |m| m.title == milestone_name.to_s }
+          return cached_milestone if cached_milestone
+        end
+        
+        # Fall back to API lookup for existing milestones
         milestones = get_versions(proj)
         milestones.find { |m| m.title == milestone_name.to_s }
       end
