@@ -1,0 +1,162 @@
+# New Project Bootstrap Issues
+# Common tasks for setting up a new software project
+
+$meta:
+  proj: myorg/new-project
+  defaults:
+    vrsn: 0.1.0
+    user: project-lead
+    tags: [project-setup, +new-project]
+    stub: true
+    head: |
+      ## 🚀 Project Bootstrap Task
+      This is a foundational task for setting up the new project.
+      
+      ---
+    body: |
+      Please complete this task as part of the initial project setup.
+      Assign to the appropriate team member and update with specific requirements.
+    tail: |
+      ---
+      
+      **Priority**: Foundation work - should be completed early
+      **Created by**: Project bootstrap automation
+
+issues:
+  # Repository and Infrastructure Setup
+  - summ: Initialize repository structure
+    stub: false
+    body: |
+      Set up the basic repository structure and initial files.
+      
+      **Tasks:**
+      - Create main branch protection rules
+      - Set up .gitignore file
+      - Add initial directory structure
+      - Configure repository settings and permissions
+    tags: [infrastructure, repository]
+    user: devops-lead
+
+  - summ: Add project README and documentation
+    body: |
+      Create comprehensive project documentation.
+      
+      **Requirements:**
+      - Project overview and purpose
+      - Installation instructions
+      - Usage examples
+      - Contributing guidelines
+      - API documentation (if applicable)
+    tags: [documentation, +high-priority]
+    user: tech-writer
+
+  - summ: Set up CI/CD pipeline
+    body: |
+      Configure automated testing and deployment.
+      
+      **Components:**
+      - GitHub Actions / Jenkins / CircleCI setup
+      - Automated testing on pull requests
+      - Code quality checks (linting, formatting)
+      - Deployment automation for staging/production
+    tags: [infrastructure, ci-cd, automation]
+    user: devops-lead
+
+  # Development Environment
+  - summ: Configure development environment setup
+    body: |
+      Create reproducible development environment.
+      
+      **Deliverables:**
+      - Docker configuration or development containers
+      - Local setup instructions
+      - Environment variable documentation
+      - IDE/editor configuration files
+    tags: [development, environment]
+    user: senior-dev
+
+  - summ: Set up code quality tools
+    body: |
+      Implement code quality and consistency tools.
+      
+      **Tools to configure:**
+      - Linters (ESLint, RuboCop, Pylint, etc.)
+      - Code formatters (Prettier, Black, etc.)
+      - Pre-commit hooks
+      - Code coverage reporting
+    tags: [development, code-quality]
+    user: senior-dev
+
+  # Testing Infrastructure
+  - summ: Implement testing framework
+    body: |
+      Set up comprehensive testing infrastructure.
+      
+      **Test types:**
+      - Unit tests
+      - Integration tests
+      - End-to-end tests (if applicable)
+      - Performance/load tests (if needed)
+    tags: [testing, framework]
+    user: qa-lead
+
+  # Security and Compliance
+  - summ: Configure security scanning and policies
+    body: |
+      Implement security best practices from the start.
+      
+      **Security measures:**
+      - Dependency vulnerability scanning
+      - Static code analysis for security issues
+      - Secrets management setup
+      - Security policy documentation
+    tags: [security, compliance, +critical]
+    user: security-team
+
+  # Project Management
+  - summ: Set up project tracking and issue management
+    body: |
+      Configure project management tools and workflows.
+      
+      **Setup tasks:**
+      - Issue templates and labels
+      - Project boards/milestones
+      - Sprint planning tools
+      - Team communication channels
+    tags: [project-management, workflow]
+    user: project-manager
+
+  # Basic Implementation Tasks
+  - Create initial project architecture
+  - Implement basic routing/navigation structure  
+  - Set up database schema and migrations
+  - Create user authentication system
+  - Implement basic API endpoints
+  - Add logging and monitoring setup
+
+  # Deployment and Operations
+  - summ: Configure staging environment
+    body: |
+      Set up staging environment for testing.
+      
+      **Requirements:**
+      - Mirror production configuration
+      - Automated deployment from main branch
+      - Test data seeding
+      - Monitoring and logging
+    tags: [infrastructure, staging, deployment]
+    user: devops-lead
+    vrsn: 0.2.0
+
+  - summ: Prepare production deployment strategy
+    body: |
+      Plan and document production deployment.
+      
+      **Planning items:**
+      - Infrastructure requirements
+      - Deployment rollback procedures
+      - Performance monitoring setup
+      - Disaster recovery plan
+    tags: [infrastructure, production, deployment]
+    user: devops-lead
+    vrsn: 1.0.0

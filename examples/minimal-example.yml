@@ -1,0 +1,9 @@
+# Minimal example for quick testing
+$meta:
+  proj: test/repo
+
+issues:
+  - summ: First test issue
+    body: Simple test issue for validation
+  - summ: Second test issue  
+  - Quick issue from string

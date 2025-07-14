@@ -1,0 +1,90 @@
+$meta:
+  proj: DocOps/issuer-test  # Test repository
+  
+issues:
+  - summ: "[TEST] Simple issue creation"
+    body: |
+      # Basic Issue Test
+      
+      This tests the most fundamental functionality: creating a simple issue with a title and body.
+      
+      **What this tests:**
+      - Basic issue creation
+      - Title and body handling
+      - No additional complexity
+      
+  - summ: "[TEST] Markdown formatting support"
+    body: |
+      # Markdown Formatting Test
+      
+      This issue tests **markdown formatting** support in issue bodies.
+      
+      ## Features tested:
+      
+      ### Text formatting:
+      - **Bold text**
+      - *Italic text*
+      - `inline code`
+      - ~~strikethrough~~
+      
+      ### Lists:
+      1. Numbered list item 1
+      2. Numbered list item 2
+      
+      - Bullet point 1
+      - Bullet point 2
+        - Nested bullet
+        - Another nested bullet
+      
+      ### Code blocks:
+      ```javascript
+      function testFunction() {
+        console.log("Hello, GitHub Issues!");
+        return "markdown test";
+      }
+      ```
+      
+      ```yaml
+      # YAML example
+      test:
+        markdown: true
+        formatting: working
+      ```
+      
+      ### Links and references:
+      - [GitHub Documentation](https://docs.github.com)
+      - [issuer CLI Repository](https://github.com/DocOps/issuer)
+      
+      ### Tables:
+      | Feature | Status | Notes |
+      |---------|--------|-------|
+      | Bold text | ✅ | Working |
+      | Code blocks | ✅ | Working |
+      | Tables | ✅ | Working |
+      
+      > **Note**: This is a blockquote to test quotation formatting.
+      
+      If all the above formatting appears correctly, markdown support is working! 🎨
+      
+  - "[TEST] String-only issue (minimal syntax)"
+    
+  - summ: "[TEST] Issue with special characters"
+    body: |
+      # Special Characters Test 🚀
+      
+      Testing various special characters and emoji support:
+      
+      **Unicode characters:** αβγδε ñáéíóú 中文 日本語 العربية
+      
+      **Symbols:** @#$%^&*()_+-=[]{}|;':",./<>?
+      
+      **Emojis:** 🎉 🚀 ✅ ❌ 🔧 📋 💡 🎯 📊 🔍
+      
+      **Code with special chars:**
+      ```bash
+      echo "Testing special chars: !@#$%^&*()"
+      grep -r "pattern" /path/to/files
+      sed 's/old/new/g' file.txt
+      ```
+      
+      This tests the robustness of issue creation with various character encodings.

@@ -1,0 +1,58 @@
+$meta:
+  proj: DocOps/issuer-test  # Test repository
+  defaults:
+    vrsn: test-milestone-v1.0
+    
+issues:
+  - summ: "[TEST] Issue with new milestone creation"
+    body: |
+      # Milestone Creation Test
+      
+      This issue tests automatic milestone creation functionality.
+      
+      **What this tests:**
+      - Creating a new milestone when it doesn't exist
+      - Associating an issue with a newly created milestone
+      - The `--auto-versions` or `--auto-metadata` flag functionality
+      
+      **Expected behavior:**
+      1. A new milestone called "test-milestone-v1.0" should be created
+      2. This issue should be associated with that milestone
+      3. The milestone should appear in the repository's Milestones section
+      
+      **Test commands:**
+      ```bash
+      # With manual confirmation
+      issuer 03-milestone-tests.yml
+      
+      # With automatic creation (no prompts)
+      issuer 03-milestone-tests.yml --auto-versions
+      issuer 03-milestone-tests.yml --auto-metadata
+      ```
+      
+  - summ: "[TEST] Issue with existing milestone"
+    body: |
+      # Existing Milestone Test
+      
+      This issue should use the same milestone as the previous issue, testing that:
+      
+      - The CLI can find and reuse existing milestones
+      - Multiple issues can be assigned to the same milestone
+      - No duplicate milestones are created
+      
+      This issue should be associated with the "test-milestone-v1.0" milestone.
+    vrsn: test-milestone-v1.0
+    
+  - summ: "[TEST] Issue with different milestone"
+    body: |
+      # Multiple Milestone Test
+      
+      This issue tests creating and using a second milestone.
+      
+      **Expected behavior:**
+      - A new milestone "test-milestone-v2.0" should be created
+      - This issue should be associated with the new milestone
+      - Both milestones should exist in the repository
+      
+      This tests the ability to handle multiple milestones in a single operation.
+    vrsn: test-milestone-v2.0

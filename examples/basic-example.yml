@@ -1,0 +1,33 @@
+# Basic example demonstrating core IMYML features
+$meta:
+  proj: myorg/myproject
+  defaults:
+    vrsn: 1.0.0
+    user: project-manager
+    tags: [enhancement]
+
+issues:
+  - summ: Add user authentication
+    body: |
+      Implement secure login and registration functionality.
+      
+      Requirements:
+      - Password hashing
+      - Session management
+      - Two-factor authentication support
+    tags: [security, authentication]
+    user: backend-dev
+
+  - summ: Fix responsive design issues
+    body: |
+      The current layout breaks on mobile devices.
+      Need to ensure proper responsive behavior.
+    tags: [bug, ui, mobile]
+    user: frontend-dev
+
+  - summ: Create API documentation
+    body: |
+      Generate comprehensive API documentation for developers.
+      Include examples and authentication details.
+    vrsn: 1.1.0
+    tags: [documentation, api]

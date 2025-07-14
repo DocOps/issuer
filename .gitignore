@@ -1,0 +1,100 @@
+# Ruby / Gem
+*.gem
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# RSpec
+/spec/reports/
+/spec/examples.txt
+.rspec_status
+
+# Test coverage
+/coverage/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+/tmp/
+*.tmp
+*.bak
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+*.sublime-*
+
+# Logs
+*.log
+
+# Build artifacts
+*.gem
+/pkg/
+
+# Docker
+.dockerignore
+
+# Development test files
+test-*.yml
+*-test.yml
+comprehensive-test.yml
+
+# IDE
+.idea/
+*.iml
+
+# Ruby version managers
+.ruby-version
+.ruby-gemset
+
+# Bundler
+/Gemfile.lock.example
+/.bundle
+
+# Documentation
+/doc/
+/.yardoc
+
+# Local development
+/local/
+/scratch/
+
+# AI-related files
+repomix-output.yml
+repomix-output.xml
+
+# Test files
+test-*.yml
+*-test.yml
+
+# Test results and artifacts
+specs/tests/results/
+specs/tests/github-api/config.yml
+specs/tests/github-api/*.yml.bak
+cleanup_commands_*.sh
+
+# Run logs and cache (now stored in ~/.config/issuer/)
+# .issuer/ - removed as logs are now user-wide
+
+# Outdated test directories (but not specs/tests)
+/tests/
+
+# Temporary documentation
+TESTING-PLAN.md
+# Vale downloaded packages (but keep project vocabularies)
+.vale/styles/

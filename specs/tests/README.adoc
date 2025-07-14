@@ -1,0 +1,451 @@
+= GitHub API Integration Testing Suite
+:toc: macro
+:toclevels: 3
+
+This directory contains comprehensive tests for the issuer CLI's GitHub API integration functionality.
+
+toc::[]
+
+== Overview
+
+The testing suite validates:
+
+* GitHub API authentication and connectivity
+* Issue creation with various configurations
+* Milestone/version management
+* Label/tag management  
+* Assignment functionality
+* Automation flags (`--auto-metadata`, etc.)
+* Error handling and edge cases
+* Run logging and artifact tracking
+
+== Artifact Logging System
+
+The issuer CLI automatically logs all created artifacts (issues, milestones, labels) to `~/.config/issuer/logs/` directory (user-wide) for tracking and potential cleanup operations.
+
+=== How It Works
+
+When you run issuer with live operations (not `--dry`):
+
+1. *Run Tracking*: A unique run ID is generated (example: `run_20250711_143022_abcd`)
+2. *Artifact Logging*: All created issues, milestones, and labels are logged with metadata
+3. *Status Tracking*: Run status is tracked (`in_progress`, `completed`, `failed`)
+4. *JSON Storage*: All data is stored in JSON format in `~/.config/issuer/logs/<RUN_ID>.json`
+
+=== Log Structure
+
+Each run log contains:
+
+[source,json]
+----
+{
+  "run_id": "run_20250711_143022_abcd",
+  "started_at": "2025-07-11T14:30:22Z",
+  "status": "completed",
+  "metadata": { "issues_planned": 15 },
+  "artifacts": {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix authentication bug",
+        "url": "https://github.com/user/repo/issues/42",
+        "created_at": "2025-07-11T14:30:25Z",
+        "repository": "user/repo"
+      }
+    ],
+    "milestones": [ ... ],
+    "labels": [ ... ]
+  },
+  "summary": {
+    "issues_created": 15,
+    "milestones_created": 2,
+    "labels_created": 5
+  },
+  "completed_at": "2025-07-11T14:32:15Z"
+}
+----
+
+=== Testing with Logging
+
+During test runs, artifacts are automatically logged. This enables:
+
+* *Verification*: Confirm that all expected artifacts were created
+* *Debugging*: Track what was created when tests fail
+* *Cleanup Planning*: Prepare for future cleanup script development
+
+The test cleanup scripts can read these logs to understand what needs to be cleaned up.
+
+=== Run Management Script
+
+A standalone script is available for managing cached runs:
+
+[source,bash]
+----
+# List all cached runs
+bundle exec ruby scripts/manage-runs.rb list
+
+# List recent runs only (last 10)
+bundle exec ruby scripts/manage-runs.rb list --recent
+
+# Show detailed information for a specific run
+bundle exec ruby scripts/manage-runs.rb show run_20250711_180124_97d1f1f3
+
+# Clean all log files (use with caution)
+bundle exec ruby scripts/manage-runs.rb clean-logs
+----
+
+This script provides a convenient way to inspect what artifacts were created during testing without needing to manually parse JSON files.
+
+== Quick Start
+
+=== 1. Setup Configuration
+
+Copy the example config file and customize it:
+
+[source,bash]
+----
+cp specs/tests/github-api/config.yml.example specs/tests/github-api/config.yml
+----
+
+Edit `config.yml` with your test repository and GitHub username:
+
+[source,yaml]
+----
+test_repo: "your-username/issuer-test-repo"
+test_username: "your-username"
+cleanup_after_tests: false
+dry_run_first: true
+verbose_output: false
+----
+
+=== 2. Set GitHub Token
+
+Ensure you have a GitHub personal access token set:
+
+[source,bash]
+----
+export GITHUB_TOKEN="your_github_token_here"
+# or any of: GITHUB_ACCESS_TOKEN, ISSUER_API_TOKEN, ISSUER_GITHUB_TOKEN
+----
+
+=== 3. Create Test Repository
+
+Create a GitHub repository for testing (or use an existing one):
+
+[source,bash]
+----
+gh repo create issuer-test-repo --public --description "Test repository for issuer CLI"
+----
+
+=== 4. Run Tests
+
+Execute the complete test suite:
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh
+----
+
+Or run with options:
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh --verbose --no-dry-run
+./specs/tests/run-github-api-tests.sh --help  # Show all options
+----
+
+== Test Files
+
+=== Core Functionality Tests
+
+* *`01-auth-connection.yml`*: Basic authentication and API connectivity
+* *`02-basic-issues.yml`*: Simple issue creation, markdown support, special characters
+* *`03-milestone-tests.yml`*: Milestone creation and assignment
+* *`04-label-tests.yml`*: Label creation, default/append logic
+* *`05-assignment-tests.yml`*: User assignment functionality
+
+=== Advanced Tests
+
+* *`06-automation-tests.yml`*: Automation flags (`--auto-metadata`, `--auto-versions`, etc.)
+* *`07-error-tests.yml`*: Error handling scenarios (invalid repo, etc.)
+* *`08-complex-tests.yml`*: Complex integration scenarios with multiple features
+
+=== Configuration
+
+* *`config.yml.example`*: Template configuration file
+* *`config.yml`*: Your customized configuration (create from example)
+
+== Test Runner Features
+
+=== Command Line Options
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh [options]
+
+Options:
+  --help, -h          Show help message
+  --config FILE       Use specific config file  
+  --verbose, -v       Verbose output
+  --no-dry-run        Skip dry-run tests
+  --cleanup           Clean up after tests
+  --non-interactive   Run without prompts
+----
+
+=== Test Categories
+
+1. *Dry-run tests*: Validate IMYML parsing without API calls
+2. *Basic functionality*: Core issue creation features
+3. *Advanced features*: Milestones, labels, assignments
+4. *Automation*: Testing `--auto-*` flags
+5. *Error scenarios*: Invalid inputs and error handling
+6. *Edge cases*: Unicode, large content, special characters
+
+== Results and Logging
+
+=== Test Results
+
+Results are saved to `specs/tests/results/` with timestamps:
+
+----
+specs/tests/results/
+├── test_results_20250711_143022.log     # Main results log
+├── 01-auth-connection_20250711_143022.log  # Individual test output
+├── 02-basic-issues_20250711_143022.log
+└── ...
+----
+
+=== Success Criteria
+
+Tests are considered successful when:
+
+* ✅ All issues are created without errors
+* ✅ Milestones are created when needed
+* ✅ Labels are created when needed  
+* ✅ Assignments work correctly
+* ✅ Automation flags work as expected
+* ✅ Error scenarios fail gracefully
+
+== Cleanup
+
+=== Automated Cleanup
+
+Run the cleanup script to remove test artifacts:
+
+[source,bash]
+----
+./specs/tests/cleanup-github-tests.sh your-username/test-repo
+----
+
+Options:
+
+[source,bash]
+----
+./specs/tests/cleanup-github-tests.sh --help                    # Show help
+./specs/tests/cleanup-github-tests.sh --dry-run your-repo       # Show what would be cleaned
+./specs/tests/cleanup-github-tests.sh --issues-only your-repo   # Only clean issues
+----
+
+=== Manual Cleanup
+
+The cleanup script generates commands for manual execution if needed.
+
+Test artifacts to clean up:
+* Issues with `[TEST]` in the title
+* Milestones with `test-*` patterns
+* Labels with `test-*` patterns
+
+== Continuous Integration
+
+=== Pre-commit Testing
+
+Run basic tests before committing:
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh --no-dry-run --non-interactive
+----
+
+=== Release Testing
+
+Run full test suite before releases:
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh --verbose --cleanup
+----
+
+== Troubleshooting
+
+=== Common Issues
+
+1. *Authentication Errors*
++
+----
+GitHub token not found in environment variables
+----
++
+Solution: Set `GITHUB_TOKEN` or other token environment variables
+
+2. *Repository Access Errors*
++
+----
+Not Found (HTTP 404)
+----
++
+Solution: Verify repository name and token permissions
+
+3. *Rate Limiting*
++
+----
+API rate limit exceeded
+----
++
+Solution: Wait or use a token with higher rate limits
+
+4. *Permission Errors*
++
+----
+Resource not accessible by integration
+----
++
+Solution: Ensure token has Issues read/write permissions
+
+=== Debug Mode
+
+Run tests with verbose output to see detailed information:
+
+[source,bash]
+----
+./specs/tests/run-github-api-tests.sh --verbose
+----
+
+=== Individual Test Execution
+
+Run individual test files manually:
+
+[source,bash]
+----
+# Update test file with your repo first
+sed -i 's/your-username\/issuer-test-repo/yourusername\/yourrepo/g' specs/tests/github-api/01-auth-connection.yml
+
+# Run the test
+issuer specs/tests/github-api/01-auth-connection.yml --dry
+issuer specs/tests/github-api/01-auth-connection.yml
+----
+
+== Test Development
+
+=== Adding New Tests
+
+1. Create a new `.yml` file in `specs/tests/github-api/`
+2. Follow the naming convention: `NN-description.yml`
+3. Use `[TEST]` prefix in issue summaries
+4. Update the test runner script to include the new test
+5. Document expected behavior in issue bodies
+
+=== Test File Template
+
+[source,yaml]
+----
+$meta:
+  proj: your-username/issuer-test-repo
+  
+issues:
+  - summ: "[TEST] Description of what this tests"
+    body: |
+      # Test Description
+      
+      **What this tests:**
+      - Feature 1
+      - Feature 2
+      
+      **Expected behavior:**
+      - Expected outcome 1
+      - Expected outcome 2
+      
+      **Test commands:**
+      ```bash
+      issuer test-file.yml --dry
+      issuer test-file.yml --auto-metadata
+      ```
+----
+
+== Integration with CI/CD
+
+=== GitHub Actions
+
+Example workflow for automated testing:
+
+[source,yaml]
+----
+name: GitHub API Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+    - name: Run GitHub API tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Setup test configuration
+        cp specs/tests/github-api/config.yml.example specs/tests/github-api/config.yml
+        sed -i 's/your-username/github-actions-test/g' specs/tests/github-api/config.yml
+        
+        # Run tests
+        ./specs/tests/run-github-api-tests.sh --non-interactive --cleanup
+----
+
+=== Local Development
+
+Set up a git hook for pre-commit testing:
+
+[source,bash]
+----
+# .git/hooks/pre-commit
+#!/bin/sh
+echo "Running GitHub API integration tests..."
+./specs/tests/run-github-api-tests.sh --no-dry-run --non-interactive
+----
+
+== Security Considerations
+
+1. *Token Security*: Never commit GitHub tokens to version control
+2. *Test Repository*: Use a dedicated test repository, not production repos  
+3. *Cleanup*: Always clean up test artifacts to avoid clutter
+4. *Rate Limits*: Be mindful of GitHub API rate limits during testing
+5. *Permissions*: Use tokens with minimal required permissions
+
+== Contributing
+
+When contributing to the test suite:
+
+1. *Add tests for new features*: Every new feature should have corresponding tests
+2. *Update existing tests*: Modify tests when changing functionality
+3. *Test edge cases*: Include tests for error conditions and edge cases
+4. *Document expectations*: Clearly document what each test validates
+5. *Clean up*: Ensure tests can be cleaned up properly
+
+== Support
+
+For issues with the testing suite:
+
+1. Check the troubleshooting section above
+2. Review test logs in `specs/tests/results/`
+3. Run individual tests manually for debugging
+4. Open an issue in the main repository with:
+   * Test configuration used
+   * Error messages
+   * Expected vs actual behavior

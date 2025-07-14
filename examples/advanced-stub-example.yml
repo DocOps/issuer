@@ -1,0 +1,50 @@
+# Advanced example showing stub functionality and tag logic
+$meta:
+  proj: docops/advanced-project
+  defaults:
+    vrsn: 2.0.0
+    user: team-lead
+    tags: [needs-review, +auto-generated]  # + prefix = append to all
+    stub: true
+    head: |
+      ## 🤖 Auto-Generated Issue
+      This issue was created by the issuer CLI tool.
+      
+      ---
+    body: |
+      This is a placeholder. Please update with specific requirements
+      and assign to the appropriate team member.
+    tail: |
+      ---
+      
+      **Created by**: issuer CLI  
+      **Project**: Advanced Features Demo
+
+issues:
+  # Scalar string issues (get all defaults + stub processing)
+  - Implement advanced search functionality
+  - Add real-time notifications
+  - Create user dashboard
+  
+  # Issue with custom content but stub enabled
+  - summ: Database performance optimization
+    stub: true
+    body: |
+      The current database queries are slow for large datasets.
+      Need to implement proper indexing and query optimization.
+    tags: [performance, database]
+    user: db-specialist
+    
+  # Issue with stub disabled (no header/footer added)
+  - summ: Critical security vulnerability fix
+    stub: false
+    body: |
+      URGENT: Security vulnerability discovered in authentication module.
+      Immediate fix required.
+    tags: [critical, security, +urgent]  # + prefix = append even with explicit tags
+    user: security-team
+    vrsn: 1.9.1
+    
+  # Issue with only append tags (gets default tags too)
+  - summ: Code refactoring initiative
+    tags: [+refactoring, +technical-debt]

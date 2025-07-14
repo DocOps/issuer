@@ -1,0 +1,98 @@
+$meta:
+  proj: DocOps/issuer-test  # Test repository
+  defaults:
+    tags: [test-default-label, +auto-applied-label]
+    
+issues:
+  - summ: "[TEST] Issue with new label creation"
+    body: |
+      # Label Creation Test
+      
+      This issue tests automatic label creation functionality.
+      
+      **What this tests:**
+      - Creating new labels when they don't exist
+      - The `--auto-tags` or `--auto-metadata` flag functionality
+      - Default label application from `$meta.defaults.tags`
+      
+      **Expected labels on this issue:**
+      - `test-new-label-1` (new, should be created)
+      - `test-new-label-2` (new, should be created)  
+      - `test-default-label` (from defaults)
+      - `auto-applied-label` (from defaults with + prefix)
+      
+      **Test commands:**
+      ```bash
+      # With manual confirmation
+      issuer 04-label-tests.yml
+      
+      # With automatic creation (no prompts)
+      issuer 04-label-tests.yml --auto-tags
+      issuer 04-label-tests.yml --auto-metadata
+      ```
+    tags: [test-new-label-1, test-new-label-2]
+    
+  - summ: "[TEST] Issue with mixed existing/new labels"
+    body: |
+      # Mixed Label Test
+      
+      This issue tests using a combination of:
+      - Existing labels that are already in the repository
+      - New labels that need to be created
+      - Default labels from metadata
+      
+      **Expected labels on this issue:**
+      - `bug` (should already exist in most repositories)
+      - `enhancement` (should already exist in most repositories)
+      - `test-mixed-new-label` (new, should be created)
+      - `test-default-label` (from defaults)
+      - `auto-applied-label` (from defaults with + prefix)
+      
+      This tests the CLI's ability to handle mixed scenarios gracefully.
+    tags: [bug, enhancement, test-mixed-new-label]
+    
+  - summ: "[TEST] Issue with label append vs. default behavior"
+    body: |
+      # Label Logic Test
+      
+      This issue has its own explicit tags, so it should:
+      
+      **Get these labels:**
+      - `test-explicit-label-1` (explicitly specified)
+      - `test-explicit-label-2` (explicitly specified)
+      - `auto-applied-label` (from defaults with + prefix - always appended)
+      
+      **NOT get these labels:**
+      - `test-default-label` (from defaults without + prefix - only for issues without explicit tags)
+      
+      This tests the append (+) vs. default tag logic.
+    tags: [test-explicit-label-1, test-explicit-label-2]
+    
+  - summ: "[TEST] Issue with no explicit tags (should get defaults)"
+    body: |
+      # Default Label Test
+      
+      This issue has no explicit tags, so it should get all default labels:
+      
+      **Expected labels:**
+      - `test-default-label` (from defaults without + prefix)
+      - `auto-applied-label` (from defaults with + prefix)
+      
+      This tests that default labels are properly applied to issues without explicit tags.
+      
+  - summ: "[TEST] Label color and description test"
+    body: |
+      # Label Customization Test
+      
+      This issue tests whether custom label colors and descriptions are supported.
+      
+      **Note:** The current implementation may create labels with default colors.
+      Future versions might support custom colors and descriptions in the IMYML format.
+      
+      **Expected labels:**
+      - `test-color-label` (new label)
+      - `test-description-label` (new label)
+      - Default labels from metadata
+      
+      Check the repository's Labels section to see what colors were assigned to the new labels.
+    tags: [test-color-label, test-description-label]

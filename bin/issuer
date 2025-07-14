@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+# Development setup script for issuer gem
+# This script helps set up the development environment
+
+require 'bundler/setup'
+require_relative '../lib/issuer'
+
+# Add the lib directory to the load path for development
+$LOAD_PATH.unshift File.join(__dir__, '..', 'lib')
+
+# Run the CLI
+Issuer::CLI.start(ARGV)

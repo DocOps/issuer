@@ -1,0 +1,56 @@
+= IMYML Examples
+
+This directory contains example IMYML (Issue YAML) files demonstrating various features of the issuer CLI tool.
+
+== Files
+
+=== `basic-example.yml`
+Demonstrates core IMYML features:
+
+* Basic meta configuration
+* Issue properties (summ, body, tags, user, vrsn)
+* Default values and overrides
+
+=== `advanced-stub-example.yml`
+Shows advanced features:
+
+* Stub functionality with head/tail/body composition
+* Tag logic with `+` prefix for append-to-all behavior
+* Mixed scalar string and structured issues
+* Conditional stub application
+
+=== `minimal-example.yml`
+Minimal example for quick testing:
+
+* Minimal meta configuration
+* Mix of structured and string issues
+
+=== `validation-test.yml`
+For testing milestone and label validation:
+
+* Issues with non-existent milestones
+* Issues with non-existent labels
+* Triggers interactive validation prompts
+
+=== `new-project-issues.yml`
+Comprehensive bootstrap issues for new software projects:
+
+* Repository and infrastructure setup tasks
+* Development environment configuration
+* Testing and security framework setup
+* Common project management tasks
+* Mix of detailed and simple issue definitions
+
+== Usage
+
+Test any example with a dry run:
+
+ issuer examples/basic-example.yml --dry
+
+Or with the Docker image:
+
+ docker run -it --rm -v $(pwd):/workdir docopslab/issuer issuer examples/basic-example.yml --dry
+
+== Creating Your Own
+
+Copy and modify any of these examples as a starting point for your own project's issue definitions.
