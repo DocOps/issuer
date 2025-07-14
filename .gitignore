@@ -95,3 +95,6 @@ specs/data/*-issues.yml
 
 # Vale downloaded packages (but keep project vocabularies)
 .vale/styles/
+
+# Local scratch space for AI output
+.warp/

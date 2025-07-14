@@ -17,17 +17,13 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "https://github.com/DocOps/issuer/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
-  spec.files = Dir.chdir(__dir__) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (File.expand_path(f) == __FILE__) ||
-        f.start_with?(*%w[test/ spec/ features/ .git .circleci appveyor Gemfile pkg/]) ||
-        f.match?(/\.gem$/) ||
-        f.match?(/test_.*\.rb$/)
-    end
-  end
+  spec.files = Dir['lib/**/*.rb'] +
+               ['exe/issuer'] +
+               ['README.adoc', 'LICENSE', 'issuer.gemspec'] +
+               Dir['examples/*.yml']
   
   spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.executables = ["issuer"]
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
