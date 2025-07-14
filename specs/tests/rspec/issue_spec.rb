@@ -26,7 +26,7 @@ RSpec.describe Issuer::Issue do
       
       expect(issue.summ).to eq('Test issue title')
       expect(issue.body).to eq('Test issue description')
-      expect(issue.tags).to eq(['bug', 'high-priority'])
+      expect(issue.tags).to eq(['default-tag', 'bug', 'high-priority'])
       expect(issue.user).to eq('testuser')
       expect(issue.vrsn).to eq('1.0.0')
     end
@@ -36,7 +36,8 @@ RSpec.describe Issuer::Issue do
       
       # Issue data should override defaults
       expect(issue.user).to eq('testuser')
-      expect(issue.tags).to eq(['bug', 'high-priority'])
+      # Tags are now combined for later processing
+      expect(issue.tags).to eq(['default-tag', 'bug', 'high-priority'])
     end
 
     it 'uses defaults when issue data is missing fields' do
@@ -121,6 +122,40 @@ RSpec.describe Issuer::Issue do
       expect(params).not_to have_key(:assignee)
       expect(params).not_to have_key(:milestone)
     end
+    
+    it 'shows milestone name in dry-run mode regardless of existence' do
+      issue_data = { 'summ' => 'Test with non-existent milestone', 'vrsn' => '999.0.0' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params[:milestone]).to eq('999.0.0')
+    end
+    
+    it 'only assigns milestone number in live mode if milestone exists' do
+      # Mock to return empty milestones (non-existent milestone)
+      allow(github_site).to receive(:find_milestone).and_return(nil)
+      
+      issue_data = { 'summ' => 'Test with non-existent milestone', 'vrsn' => '999.0.0' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: false)
+      
+      expect(params).not_to have_key(:milestone)
+    end
+    
+    it 'assigns milestone number in live mode if milestone exists' do
+      # Mock to return a milestone
+      mock_milestone = double('milestone', title: '2.0.0', number: 2)
+      allow(github_site).to receive(:find_milestone).and_return(mock_milestone)
+      
+      issue_data = { 'summ' => 'Test with existing milestone', 'vrsn' => '2.0.0' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: false)
+      
+      expect(params[:milestone]).to eq(2)
+    end
   end
 
   describe '.from_array' do
@@ -153,6 +188,150 @@ RSpec.describe Issuer::Issue do
     end
   end
 
+  describe 'tag logic' do
+    describe 'constructor tag merging' do
+      it 'combines defaults and issue tags for later processing' do
+        defaults = { 'tags' => ['+posted-by-issuer', 'needs-label'] }
+        issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement'] }
+        issue = described_class.new(issue_data, defaults)
+        
+        expect(issue.tags).to eq(['+posted-by-issuer', 'needs-label', 'bug', 'enhancement'])
+      end
+      
+      it 'handles empty issue tags' do
+        defaults = { 'tags' => ['+posted-by-issuer', 'needs-label'] }
+        issue_data = { 'summ' => 'Test' }
+        issue = described_class.new(issue_data, defaults)
+        
+        expect(issue.tags).to eq(['+posted-by-issuer', 'needs-label'])
+      end
+      
+      it 'handles empty defaults tags' do
+        defaults = {}
+        issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement'] }
+        issue = described_class.new(issue_data, defaults)
+        
+        expect(issue.tags).to eq(['bug', 'enhancement'])
+      end
+    end
+    
+    describe '#apply_tag_logic' do
+      let(:defaults) { { 'tags' => ['+posted-by-issuer', 'needs-label'] } }
+      
+      context 'when issue has regular tags' do
+        it 'includes append tags from defaults and issue regular tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'bug', 'enhancement')
+        end
+        
+        it 'excludes default-only tags when issue has regular tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).not_to include('needs-label')
+        end
+        
+        it 'combines issue append tags with defaults append tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['+urgent', 'bug'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'urgent', 'bug')
+        end
+      end
+      
+      context 'when issue has no regular tags' do
+        it 'includes both append and default tags from defaults' do
+          issue_data = { 'summ' => 'Test' }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'needs-label')
+        end
+        
+        it 'handles issue with only append tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['+critical'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'critical', 'needs-label')
+        end
+      end
+      
+      context 'with CLI tags' do
+        it 'includes CLI append tags with defaults append tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic(['cli-urgent'], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-urgent', 'bug')
+        end
+        
+        it 'includes CLI default tags when issue has no regular tags' do
+          issue_data = { 'summ' => 'Test' }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], ['cli-default'])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-default', 'needs-label')
+        end
+      end
+    end
+    
+    describe '.parse_tag_logic' do
+      it 'parses append tags (with + prefix)' do
+        result = described_class.parse_tag_logic('+urgent,+critical')
+        expect(result).to eq([['urgent', 'critical'], []])
+      end
+      
+      it 'parses default tags (without + prefix)' do
+        result = described_class.parse_tag_logic('bug,enhancement')
+        expect(result).to eq([[], ['bug', 'enhancement']])
+      end
+      
+      it 'parses mixed append and default tags' do
+        result = described_class.parse_tag_logic('+urgent,bug,+critical')
+        expect(result).to eq([['urgent', 'critical'], ['bug']])
+      end
+      
+      it 'handles nil input' do
+        result = described_class.parse_tag_logic(nil)
+        expect(result).to eq([[], []])
+      end
+      
+      it 'handles empty string input' do
+        result = described_class.parse_tag_logic('')
+        expect(result).to eq([[], []])
+      end
+    end
+    
+    describe '.apply_tag_logic (class method)' do
+      it 'applies tag logic to multiple issues' do
+        defaults = { 'tags' => ['+posted-by-issuer', 'needs-label'] }
+        issues_data = [
+          { 'summ' => 'Issue with tags', 'tags' => ['bug'] },
+          { 'summ' => 'Issue without tags' }
+        ]
+        
+        issues = described_class.from_array(issues_data, defaults)
+        described_class.apply_tag_logic(issues, nil)
+        
+        expect(issues[0].tags).to contain_exactly('posted-by-issuer', 'bug')
+        expect(issues[1].tags).to contain_exactly('posted-by-issuer', 'needs-label')
+      end
+    end
+  end
+  
   describe 'new properties support' do
     it 'supports body field instead of desc (legacy support)' do
       new_format = { 'summ' => 'Title', 'body' => 'New body format' }

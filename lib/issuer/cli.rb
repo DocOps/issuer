@@ -17,7 +17,7 @@ module Issuer
     class_option :user, type: :string, desc: 'Default assignee (GitHub username)'
     class_option :tags, type: :string, desc: 'Comma-separated extra labels for all issues'
     class_option :stub, type: :boolean, desc: 'Enable stub mode for all issues'
-    class_option :dry, type: :boolean, default: false, desc: 'Print issues, don\'t post'
+    class_option :dry, type: :boolean, default: false, aliases: ['--dry-run'], desc: 'Print issues, don\'t post'
     class_option :tokenv, type: :string, desc: 'Name of environment variable containing GitHub token'
 
     # Resource automation options
@@ -127,8 +127,8 @@ module Issuer
         site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
         site = Issuer::Sites::Factory.create('github', **site_options)
         automation_options = {
-          auto_versions: options[:auto_versions] || options[:auto_metadata],
-          auto_tags: options[:auto_tags] || options[:auto_metadata]
+          auto_versions: !!options[:auto_versions] || !!options[:auto_metadata],
+          auto_tags: !!options[:auto_tags] || !!options[:auto_metadata]
         }
 
         # Start run tracking for live operations
@@ -175,7 +175,7 @@ module Issuer
         --tokenv VAR_NAME        #{self.class_options[:tokenv].description}
 
       Mode Options:
-        --dry                    #{self.class_options[:dry].description}
+        --dry, --dry-run         #{self.class_options[:dry].description}
         --auto-versions          #{self.class_options[:auto_versions].description}
         --auto-milestones        (alias for --auto-versions)
         --auto-tags              #{self.class_options[:auto_tags].description}
@@ -228,7 +228,7 @@ module Issuer
         puts "Would process #{valid_count} issues, skip #{invalid_count}"
       else
         puts "\n✅ Completed: #{valid_count} issues processed, #{invalid_count} skipped"
-        puts "Run ID: #{Issuer::Cache.current_run_id}" if Issuer::Cache.current_run_id
+        # Note: Run ID is already displayed in the main flow, no need to repeat it here
       end
       
     end

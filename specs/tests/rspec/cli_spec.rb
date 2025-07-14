@@ -6,7 +6,16 @@ RSpec.describe Issuer::CLI do
   # Mock the GitHub site methods to avoid actual API calls during testing
   before do
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:get_versions).and_return([])
+    allow_any_instance_of(Issuer::Sites::GitHub).to receive(:get_tags).and_return([])
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:find_milestone).and_return(nil)
+    allow_any_instance_of(Issuer::Sites::GitHub).to receive(:create_version).and_return({
+      object: double(number: 1, title: 'test-milestone'),
+      tracking_data: { number: 1, title: 'test-milestone' }
+    })
+    allow_any_instance_of(Issuer::Sites::GitHub).to receive(:create_tag).and_return({
+      object: double(name: 'test-label'),
+      tracking_data: { name: 'test-label' }
+    })
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:convert_issue_to_site_params).and_wrap_original do |method, *args|
       issue, repo = args
       {
@@ -17,6 +26,16 @@ RSpec.describe Issuer::CLI do
         milestone: issue.vrsn
       }
     end
+    
+    # Mock Cache methods to avoid file system operations
+    allow(Issuer::Cache).to receive(:start_run).and_return('mock-run-id')
+    allow(Issuer::Cache).to receive(:complete_run)
+    allow(Issuer::Cache).to receive(:fail_run)
+    allow(Issuer::Cache).to receive(:log_milestone_created)
+    allow(Issuer::Cache).to receive(:log_label_created)
+    
+    # Mock STDIN to avoid hanging on user input
+    allow(STDIN).to receive(:gets).and_return("n\n")
   end
 
   describe 'file argument handling' do
@@ -105,6 +124,82 @@ RSpec.describe Issuer::CLI do
       )
 
       ENV.delete('MY_GITHUB_TOKEN')
+    end
+
+    it 'handles --auto-metadata option' do
+      # Mock the Ops.validate_and_prepare_resources to capture automation options
+      allow(Issuer::Ops).to receive(:validate_and_prepare_resources)
+      # Mock post_issues to avoid actual GitHub API calls
+      allow_any_instance_of(Issuer::Sites::GitHub).to receive(:post_issues).and_return(0)
+
+      cli = Issuer::CLI.new
+      cli.invoke(:main, [sample_file], {auto_metadata: true, proj: 'test/repo'})
+
+      # Verify that validate_and_prepare_resources was called with correct automation options
+      expect(Issuer::Ops).to have_received(:validate_and_prepare_resources).with(
+        anything,  # site
+        anything,  # repo
+        anything,  # issues
+        hash_including(auto_versions: true, auto_tags: true),  # automation_options
+        anything   # run_id
+      )
+    end
+
+    it 'handles --auto-versions option' do
+      # Mock the Ops.validate_and_prepare_resources to capture automation options
+      allow(Issuer::Ops).to receive(:validate_and_prepare_resources)
+      # Mock post_issues to avoid actual GitHub API calls
+      allow_any_instance_of(Issuer::Sites::GitHub).to receive(:post_issues).and_return(0)
+
+      cli = Issuer::CLI.new
+      cli.invoke(:main, [sample_file], {auto_versions: true, proj: 'test/repo'})
+
+      # Verify that validate_and_prepare_resources was called with correct automation options
+      expect(Issuer::Ops).to have_received(:validate_and_prepare_resources).with(
+        anything,  # site
+        anything,  # repo
+        anything,  # issues
+        hash_including(auto_versions: true, auto_tags: false),  # automation_options
+        anything   # run_id
+      )
+    end
+
+    it 'handles --auto-tags option' do
+      # Mock the Ops.validate_and_prepare_resources to capture automation options
+      allow(Issuer::Ops).to receive(:validate_and_prepare_resources)
+      # Mock post_issues to avoid actual GitHub API calls
+      allow_any_instance_of(Issuer::Sites::GitHub).to receive(:post_issues).and_return(0)
+
+      cli = Issuer::CLI.new
+      cli.invoke(:main, [sample_file], {auto_tags: true, proj: 'test/repo'})
+
+      # Verify that validate_and_prepare_resources was called with correct automation options
+      expect(Issuer::Ops).to have_received(:validate_and_prepare_resources).with(
+        anything,  # site
+        anything,  # repo
+        anything,  # issues
+        hash_including(auto_versions: false, auto_tags: true),  # automation_options
+        anything   # run_id
+      )
+    end
+
+    it 'combines individual flags with auto_metadata' do
+      # Test that --auto-metadata overrides individual flags
+      allow(Issuer::Ops).to receive(:validate_and_prepare_resources)
+      # Mock post_issues to avoid actual GitHub API calls
+      allow_any_instance_of(Issuer::Sites::GitHub).to receive(:post_issues).and_return(0)
+
+      cli = Issuer::CLI.new
+      cli.invoke(:main, [sample_file], {auto_metadata: true, auto_versions: false, proj: 'test/repo'})
+
+      # auto_metadata should set both to true, regardless of individual flag values
+      expect(Issuer::Ops).to have_received(:validate_and_prepare_resources).with(
+        anything,  # site
+        anything,  # repo
+        anything,  # issues
+        hash_including(auto_versions: true, auto_tags: true),  # automation_options
+        anything   # run_id
+      )
     end
 
   end

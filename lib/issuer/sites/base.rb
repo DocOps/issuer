@@ -67,7 +67,8 @@ module Issuer
         issues.each do |issue|
           begin
             # Convert IMYML issue to site-specific parameters
-            site_params = convert_issue_to_site_params(issue, proj)
+            # Pass run_id to enable post-validation milestone lookup
+            site_params = convert_issue_to_site_params(issue, proj, dry_run: false, post_validation: true)
             result = create_issue(proj, site_params)
 
             # Extract the created issue object (for backwards compatibility)
