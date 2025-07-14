@@ -57,14 +57,14 @@ jobs:
     - name: Build gem
       run: gem build issuer.gemspec
     
-    - name: Publish to RubyGems
-      run: |
-        mkdir -p ~/.gem
-        echo ":rubygems_api_key: ${{ secrets.RUBYGEMS_API_KEY }}" > ~/.gem/credentials
-        chmod 0600 ~/.gem/credentials
-        gem push issuer-*.gem
-      env:
-        RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+    # - name: Publish to RubyGems
+    #   run: |
+    #     mkdir -p ~/.gem
+    #     echo ":rubygems_api_key: ${{ secrets.RUBYGEMS_API_KEY }}" > ~/.gem/credentials
+    #     chmod 0600 ~/.gem/credentials
+    #     gem push issuer-*.gem
+    #   env:
+    #     RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
 
   docker-build:
     runs-on: ubuntu-latest
@@ -96,15 +96,15 @@ jobs:
           type=semver,pattern={{major}}
           type=raw,value=latest,enable={{is_default_branch}}
     
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    # - name: Build and push Docker image
+    #   uses: docker/build-push-action@v5
+    #   with:
+    #     context: .
+    #     push: true
+    #     tags: ${{ steps.meta.outputs.tags }}
+    #     labels: ${{ steps.meta.outputs.labels }}
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
 
   integration-test:
     runs-on: ubuntu-latest
