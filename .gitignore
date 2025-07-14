@@ -91,8 +91,8 @@ cleanup_commands_*.sh
 # Run logs and cache (now stored in ~/.config/issuer/)
 # .issuer/ - removed as logs are now user-wide
 
-# Outdated test directories
-tests/
+# Outdated test directories (but not specs/tests)
+/tests/
 
 # Temporary documentation
 TESTING-PLAN.md
