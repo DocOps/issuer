@@ -5,6 +5,9 @@ require_relative "spec_helper"
 RSpec.describe Issuer::CLI do
   # Mock the GitHub site methods to avoid actual API calls during testing
   before do
+    # Mock GitHub token detection to avoid authentication errors
+    allow(Issuer::Sites::GitHub).to receive(:detect_github_token).and_return('mock-token')
+    
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:get_versions).and_return([])
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:get_tags).and_return([])
     allow_any_instance_of(Issuer::Sites::GitHub).to receive(:find_milestone).and_return(nil)
@@ -26,6 +29,11 @@ RSpec.describe Issuer::CLI do
         milestone: issue.vrsn
       }
     end
+    
+    # Mock Octokit client to avoid actual API calls
+    mock_client = double('Octokit::Client')
+    allow(mock_client).to receive(:auto_paginate=)
+    allow(Octokit::Client).to receive(:new).and_return(mock_client)
     
     # Mock Cache methods to avoid file system operations
     allow(Issuer::Cache).to receive(:start_run).and_return('mock-run-id')
