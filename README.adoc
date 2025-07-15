@@ -192,7 +192,7 @@ issues:
 ----
 
 [TIP]
-This repository contains numerous link:lib/examples/README.adoc[example files] to use for inspiration.
+This repository contains numerous link:examples/README.adoc[example files] to use for inspiration.
 
 The IMYML format will be standardized and formally specified in a future release of _issuer_, but it will remain an _open standard_ adoptable by anyone who wants to exploit or extend it.
 
