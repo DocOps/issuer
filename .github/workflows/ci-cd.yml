@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    # Run tests on ALL pull requests, regardless of target branch
   release:
     types: [ published ]
 
