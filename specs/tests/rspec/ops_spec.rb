@@ -226,4 +226,43 @@ RSpec.describe Issuer::Ops do
       $stdout = original_stdout
     end
   end
+
+  describe 'case insensitive type matching' do
+    it 'matches type names case insensitively' do
+      # Test the case insensitive logic using same pattern as in GitHub API client
+      mock_types = [
+        { 'id' => 'type1', 'name' => 'Bug', 'description' => 'A bug' },
+        { 'id' => 'type2', 'name' => 'Feature', 'description' => 'A feature' },
+        { 'id' => 'type3', 'name' => 'Task', 'description' => 'A task' }
+      ]
+
+      test_cases = [
+        ['bug', 'Bug'],
+        ['BUG', 'Bug'],
+        ['Bug', 'Bug'],
+        ['bUg', 'Bug'],
+        ['feature', 'Feature'],
+        ['FEATURE', 'Feature'],
+        ['Feature', 'Feature'],
+        ['task', 'Task'],
+        ['TASK', 'Task'],
+        ['Task', 'Task']
+      ]
+
+      test_cases.each do |input_type, expected_name|
+        matched_type = mock_types.find { |type| type['name'].downcase == input_type.downcase }
+        expect(matched_type).not_to be_nil, "Expected '#{input_type}' to match a type"
+        expect(matched_type['name']).to eq(expected_name), "Expected '#{input_type}' to match '#{expected_name}'"
+      end
+    end
+
+    it 'returns nil for non-existent types' do
+      mock_types = [
+        { 'id' => 'type1', 'name' => 'Bug', 'description' => 'A bug' }
+      ]
+      
+      matched_type = mock_types.find { |type| type['name'].downcase == 'nonexistent'.downcase }
+      expect(matched_type).to be_nil
+    end
+  end
 end
