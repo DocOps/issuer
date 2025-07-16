@@ -349,6 +349,78 @@ RSpec.describe Issuer::Issue do
           expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-default', 'needs-label')
         end
       end
+      
+      context 'with removal tags (-prefix)' do
+        it 'removes tags specified with - prefix from issue tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'bug')
+          expect(issue.tags).not_to include('needs-label')
+        end
+        
+        it 'removes append tags specified with - prefix' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-posted-by-issuer'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('bug')
+          expect(issue.tags).not_to include('posted-by-issuer')
+        end
+        
+        it 'handles multiple removal tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement', '-needs-label', '-posted-by-issuer'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('bug', 'enhancement')
+          expect(issue.tags).not_to include('needs-label', 'posted-by-issuer')
+        end
+        
+        it 'handles removal tags when no matching tags exist' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-nonexistent-tag'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'bug')
+        end
+        
+        it 'processes removal tags with CLI tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic(['cli-urgent'], ['cli-default'])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-urgent', 'bug')
+          expect(issue.tags).not_to include('needs-label')
+        end
+        
+        it 'handles colon-separated tags in removal (needs:docs example)' do
+          defaults_with_colon = { 'tags' => ['+posted-by-issuer', 'needs:docs', 'needs:label'] }
+          issue_data = { 'summ' => 'Test', 'tags' => ['documentation', '-needs:docs'] }
+          issue = described_class.new(issue_data, defaults_with_colon)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'documentation')
+          expect(issue.tags).not_to include('needs:docs')
+        end
+        
+        it 'handles string format removal tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer')
+          expect(issue.tags).not_to include('needs-label')
+        end
+      end
     end
     
     describe '.parse_tag_logic' do
