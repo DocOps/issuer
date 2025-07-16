@@ -24,7 +24,7 @@ _Issuer_ lets you define all your work tickets in one place as YAML, apply defau
 * *Issue validation* with helpful error messages
 * *GitHub API integration* via Octokit
 
-Future plans include extending this capability to *JIRA*, *GitLab* Issues, GitHub *Projects*, and other services.
+Future plans include extending this capability to *Jira*, *GitLab* Issues, GitHub *Projects*, and other services.
 
 toc::[]
 
@@ -418,7 +418,7 @@ I developed the 0.1.0 version of this application after trying to use GitHub Cop
 That facility seems like a perfectly inappropriate use of generative AI.
 It accepted my plan request and pre-drafted ticket content, but then it wanted me to manually add labels and milestones to them, as well as manually click *create* on each one -- even though I had already taken the time to plan and instruct the milestones and labels and the contents were fullly prepared.
 
-Additionally, I find myself using different issue-management systems (JIRA, GitLab Issues, etc), so I wanted a more platform-agnostic way to handle this problem.
+Additionally, I find myself using different issue-management systems (Jira, GitLab Issues, etc), so I wanted a more platform-agnostic way to handle this problem.
 With that in mind, I have left the Ruby API and the IMYML model fairly "`generic`" for extensibility.
 I will probably adapt the API to other systems in future releases, and I welcome <<contributing,contributions>> to that effect.
 
