@@ -23,6 +23,7 @@ module Issuer
   # Tags support special prefix notation:
   # * Regular tags (e.g., +"bug"+) are only applied if the issue has no existing tags
   # * Append tags (e.g., +"+urgent"+) are always applied to all issues
+  # * Removal tags (e.g., +"-needs:docs"+) are removed from the default/appended tags list
   #
   # == Stub Composition
   #
@@ -169,28 +170,32 @@ module Issuer
 
     # Apply tag logic for this issue
     # 
-    # Processes existing tags with + prefix as append tags, combines them with
-    # CLI-provided tags, and determines final tag set based on precedence rules.
+    # Processes existing tags with + prefix as append tags, - prefix as removal tags,
+    # combines them with CLI-provided tags, and determines final tag set based on precedence rules.
     # 
     # @param cli_append_tags [Array<String>] Tags to always append from CLI
     # @param cli_default_tags [Array<String>] Default tags from CLI (used when no regular tags exist)
     # @return [void] Sets @tags instance variable
     # 
     # @example
-    #   # Issue has tags: ['+urgent', 'bug']
-    #   issue.apply_tag_logic(['cli-tag'], ['default-tag'])
-    #   # Result: ['urgent', 'cli-tag', 'bug']
+    #   # Issue has tags: ['+urgent', 'bug', '-needs:docs']
+    #   issue.apply_tag_logic(['cli-tag'], ['default-tag', 'needs:docs'])
+    #   # Result: ['urgent', 'cli-tag', 'bug', 'default-tag'] (needs:docs removed)
     def apply_tag_logic cli_append_tags, cli_default_tags
-      # Parse existing tags for + prefix
+      # Parse existing tags for + and - prefixes
       existing_tags = tags || []
       append_tags = []
       regular_tags = []
+      remove_tags = []
 
       existing_tags.each do |tag|
-        if tag.to_s.start_with?('+')
-          append_tags << tag.to_s[1..] # Remove + prefix
+        tag_str = tag.to_s
+        if tag_str.start_with?('+')
+          append_tags << tag_str[1..] # Remove + prefix
+        elsif tag_str.start_with?('-')
+          remove_tags << tag_str[1..] # Remove - prefix
         else
-          regular_tags << tag.to_s
+          regular_tags << tag_str
         end
       end
 
@@ -199,7 +204,7 @@ module Issuer
       final_tags = append_tags + defaults_append_tags + cli_append_tags
 
       # For regular tags, add issue's own tags, otherwise use default tags
-      issue_regular_tags = Array(@raw_data['tags']).reject { |tag| tag.to_s.start_with?('+') }
+      issue_regular_tags = Array(@raw_data['tags']).reject { |tag| tag.to_s.start_with?('+') || tag.to_s.start_with?('-') }
 
       if !issue_regular_tags.empty?
         # Issue has its own regular tags, use them
@@ -207,13 +212,19 @@ module Issuer
       else
         # Issue has no regular tags, use defaults from CLI
         final_tags.concat(cli_default_tags)
-        # Also add non-append defaults tags
+        # Also add non-append defaults tags (- prefix ignored in defaults)
         defaults_regular_tags = Array(@defaults['tags']).reject { |tag| tag.to_s.start_with?('+') }
         final_tags.concat(defaults_regular_tags)
       end
 
-      # Set the final tags (removing duplicates)
-      @tags = final_tags.uniq
+      # Collect removal tags from issue only (not defaults)
+      all_remove_tags = remove_tags
+      
+      # Remove duplicates first, then remove tags specified for removal
+      final_tags = final_tags.uniq - all_remove_tags
+      
+      # Set the final tags
+      @tags = final_tags
     end
 
     # Apply stub logic for this issue
@@ -259,7 +270,8 @@ module Issuer
     # 
     # Separates tags with + prefix (append tags) from regular tags (default tags).
     # Tags with + prefix are always applied, while regular tags are only used
-    # when the issue has no existing regular tags.
+    # when the issue has no existing regular tags. Tags with - prefix are handled
+    # in the apply_tag_logic method for removal.
     # 
     # @param tags_string [String] Comma-separated tag string
     # @return [Array<Array<String>>] Two-element array: [append_tags, default_tags]
