@@ -156,6 +156,69 @@ RSpec.describe Issuer::Issue do
       
       expect(params[:milestone]).to eq(2)
     end
+    
+    it 'includes type in site params when type is present' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params[:type]).to eq('Bug')
+    end
+
+    it 'excludes type from site params when type is nil' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params).not_to have_key(:type)
+    end
+
+    it 'strips whitespace from type' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => '  Bug  ' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params[:type]).to eq('Bug')
+    end
+
+    it 'excludes type when type is empty string' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => '   ' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params).not_to have_key(:type)
+    end
+
+    it 'displays type in formatted output when present' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).to include('type:       Bug')
+    end
+
+    it 'omits type from formatted output when absent' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).not_to include('type:')
+    end
+
+    it 'does not display repo field in formatted output' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).not_to include('repo:')
+    end
   end
 
   describe '.from_array' do
@@ -358,6 +421,36 @@ RSpec.describe Issuer::Issue do
       issue = described_class.new(issue_data)
       expect { issue.body = 'Modified body' }.not_to raise_error
       expect(issue.body).to eq('Modified body')
+    end
+
+    it 'supports type field' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      expect(issue.type).to eq('Bug')
+    end
+
+    it 'uses default type when issue data has no type' do
+      issue_data = { 'summ' => 'Test Issue' }
+      defaults = { 'type' => 'Feature' }
+      issue = described_class.new(issue_data, defaults)
+      
+      expect(issue.type).to eq('Feature')
+    end
+
+    it 'prefers issue type over default type' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      defaults = { 'type' => 'Feature' }
+      issue = described_class.new(issue_data, defaults)
+      
+      expect(issue.type).to eq('Bug')
+    end
+
+    it 'handles nil type gracefully' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      expect(issue.type).to be_nil
     end
   end
 end

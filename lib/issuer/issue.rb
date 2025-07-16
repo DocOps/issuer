@@ -15,6 +15,7 @@ module Issuer
   # +tags+:: Array of labels to apply
   # +user+:: Assignee username
   # +vrsn+:: Milestone/version
+  # +type+:: Issue type (e.g., Bug, Feature, Task)
   # +stub+:: Whether to apply stub text composition
   #
   # == Tag Logic
@@ -50,7 +51,7 @@ module Issuer
   #   valid_issues = Issuer::Issue.valid_issues_from_array(array_of_data, defaults)
   #
   class Issue
-    attr_reader :summ, :tags, :user, :vrsn, :raw_data
+    attr_reader :summ, :tags, :user, :vrsn, :type, :raw_data
     attr_accessor :body, :stub
 
     ##
@@ -60,7 +61,12 @@ module Issuer
     # @param defaults [Hash] Default values to apply when issue data is missing properties
     #
     def initialize issue_data, defaults={}
-      @raw_data = issue_data || {}
+      # Handle string issues (simple format where string is the summary)
+      if issue_data.is_a?(String)
+        @raw_data = { 'summ' => issue_data }
+      else
+        @raw_data = issue_data || {}
+      end
       @defaults = defaults
       
       # For most fields, issue data overrides defaults
@@ -68,6 +74,7 @@ module Issuer
       @body = @raw_data['body'] || @raw_data['desc'] || defaults['body'] || defaults['desc'] || '' # Support both body and desc (legacy)
       @user = @raw_data['user'] || defaults['user']
       @vrsn = @raw_data['vrsn'] || defaults['vrsn']
+      @type = @raw_data['type'] || defaults['type']
       @stub = @raw_data.key?('stub') ? @raw_data['stub'] : defaults['stub']
       
       # For tags, we need special handling - combine defaults and issue tags for later processing
@@ -299,7 +306,7 @@ module Issuer
     #               Users cannot log in properly after the recent update.
     #               This affects all user accounts.
     #   
-    #   repo:       myorg/myproject
+    #   type:       Bug
     #   milestone:  1.0.0
     #   labels:
     #     - bug
@@ -331,9 +338,11 @@ module Issuer
         output << ""  # Empty line after body
       end
       
-      # Repository
-      repo_field = field_map[:repo] || 'repo'
-      output << sprintf("%-12s%s", "#{repo_field}:", repo) if repo
+      # Type
+      if site_params[:type]
+        type_field = field_map[:type] || 'type'
+        output << sprintf("%-12s%s", "#{type_field}:", site_params[:type])
+      end
       
       # Milestone/Version
       if site_params[:milestone]
