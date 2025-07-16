@@ -25,7 +25,7 @@ require_relative "issuer/cli"
 # * Configurable defaults and label application logic
 # * Environment variable support for authentication
 # * Issue validation with helpful error messages
-# * Extensible architecture for multiple platforms (GitHub, JIRA, GitLab, etc.)
+# * Extensible architecture for multiple platforms (GitHub, Jira, GitLab, etc.)
 # * Run logging and artifact tracking for cleanup operations
 #
 # == Quick Start
