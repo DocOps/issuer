@@ -296,8 +296,9 @@ user:::
 (String)
 The system username of the person or bot to which the ticket is assigned.
 
-stub [true+++*+++|false]:::
+stub:::
 (Boolean)
+Accepts `true` or `false`.
 Whether to treat the issue as a stub entry, meaning prepend any `$meta.defaults.head` text or append any `$meta.defaults.tail` text, and in case the ticket has no `body` property, insert the text of `$meta.defaults.body`.
 
 [[cli-usage]]
@@ -344,7 +345,7 @@ Whether to treat all issues as stubs, meaning prepend any `$meta.defaults.head` 
 
 ==== Mode Options
 
---dry::
+--dry, --dry-run::
 Dry-run: print actions but do not post to GitHub.
 
 --auto-versions, --auto-milestones::
@@ -356,7 +357,7 @@ Automatically create missing labels/tags without prompting for confirmation.
 --auto-metadata::
 Automatically create all missing metadata (milestones and labels) without prompting for confirmation. Equivalent to using both `--auto-versions` and `--auto-tags`.
 
---help::
+--help, -h::
 Prints the usage screen.
 
 --version::
@@ -566,7 +567,7 @@ The GitHub API test suite validates:
 
 == API Reference
 
-For detailed API documentation, see the automatically generated documentation at https://gemdocs.org/gems/issuer[GemDocs].
+For detailed API documentation, see the automatically generated documentation at https://gemdocs.org/gems/issuer/{this_prod_vrsn}[GemDocs].
 
 The API reference includes:
 
