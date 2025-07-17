@@ -516,10 +516,10 @@ bundle exec rspec --pattern "*ops*"
 
 The `pr_test` task runs the exact same tests that GitHub Actions runs for pull requests:
 
-* **RSpec Tests**: All unit tests (`bundle exec rake spec`)
-* **CLI Tests**: Command-line interface functionality tests
-* **YAML Validation**: Validates all example YAML files
-* **Documentation Quality**: Vale linting on all documentation files
+* *RSpec Tests*: All unit tests (`bundle exec rake spec`)
+* *CLI Tests*: Command-line interface functionality tests
+* *YAML Validation*: Validates all example YAML files
+* *Documentation Quality*: Vale linting on all documentation files
 
 This ensures you can validate your changes locally before pushing to GitHub.
 
