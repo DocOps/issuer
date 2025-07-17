@@ -116,7 +116,7 @@ RSpec.describe Issuer::CLI do
       }.to output(/Would process 2 issues/).to_stdout
     end
 
-    it 'handles --tokenv option' do
+    it 'handles --tokenv option (deprecated but functional)' do
       ENV['MY_GITHUB_TOKEN'] = 'ghp_xxxxx'
 
       # Mock the Factory to capture the site_options passed to it
