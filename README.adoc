@@ -565,7 +565,7 @@ The GitHub API test suite validates:
 * Automation flags (`--auto-metadata`, `--auto-versions`, etc.)
 * Error handling and edge cases
 
-== API Reference
+=== API Reference
 
 For detailed API documentation, see the automatically generated documentation at https://gemdocs.org/gems/issuer/{this_prod_vrsn}[GemDocs].
 
