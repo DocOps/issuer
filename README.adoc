@@ -461,7 +461,7 @@ I will probably adapt the API to other systems in future releases, and I welcome
 
 === Methodology Confession
 
-I should note up front that this is the closest I have come to "`vibe coding`" anything bigger than a local script, let alone a shippable production code.
+I should note up front that this is the closest I have come to "`vibe coding`" anything bigger than a local script, let alone shippable production code.
 Nevertheless, I intervened to make substantial and specific changes at least 100 times, and I rearranged major aspects of the codebase.
 
 I designed the IMYML format and the CLI up front, then I let Claud 4 (via GH Copilot) draft most of the code.
