@@ -342,10 +342,13 @@ module Issuer
       if site_params[:body] && !site_params[:body].strip.empty?
         body_field = field_map[:body] || 'body'
         output << "#{body_field}:"
-        # Indent body content
+        # Indent body content with proper line wrapping
         body_lines = site_params[:body].strip.split("\n")
         body_lines.each do |line|
-          output << "            #{line}"
+          wrapped_lines = wrap_line_with_indentation(line, 12)
+          wrapped_lines.each do |wrapped_line|
+            output << wrapped_line
+          end
         end
         output << ""  # Empty line after body
       end
@@ -385,6 +388,54 @@ module Issuer
 
     private
 
+    # Wrap a line with proper indentation, handling long lines that exceed terminal width
+    # 
+    # @param line [String] The line to wrap
+    # @param indent_size [Integer] Number of spaces for indentation
+    # @return [Array<String>] Array of wrapped lines with proper indentation
+    # 
+    # @example
+    #   wrap_line_with_indentation("This is a very long line that needs wrapping", 4)
+    #   # => ["    This is a very long line that needs", "    wrapping"]
+    def wrap_line_with_indentation(line, indent_size)
+      # Get terminal width, default to 80 if not available
+      terminal_width = ENV['COLUMNS']&.to_i || 80
+      
+      # Calculate available width for content (terminal width - indentation)
+      available_width = terminal_width - indent_size
+      
+      # If line fits within available width, just return it with indentation
+      if line.length <= available_width
+        return [' ' * indent_size + line]
+      end
+      
+      # Split long line into chunks that fit
+      wrapped_lines = []
+      remaining_text = line
+      
+      while remaining_text.length > available_width
+        # Find the last space before the available width limit
+        break_point = remaining_text.rindex(' ', available_width)
+        
+        # If no space found, break at the available width (hard wrap)
+        break_point = available_width if break_point.nil?
+        
+        # Extract the chunk and add it with proper indentation
+        chunk = remaining_text[0...break_point]
+        wrapped_lines << (' ' * indent_size + chunk)
+        
+        # Remove the processed chunk from remaining text
+        remaining_text = remaining_text[break_point..].lstrip
+      end
+      
+      # Add the final chunk if any text remains
+      if !remaining_text.empty?
+        wrapped_lines << (' ' * indent_size + remaining_text)
+      end
+      
+      wrapped_lines
+    end
+    
     # Determine if stub logic should be applied to this issue
     # 
     # Checks issue-level stub property first, then falls back to defaults.
