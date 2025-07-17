@@ -223,7 +223,7 @@ module Issuer
           %w[ISSUER_API_TOKEN ISSUER_GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_TOKEN]
         end
 
-        def detect_github_token(custom_env_var)
+        def detect_github_token custom_env_var
           # Check custom env var first if provided
           return ENV[custom_env_var] if custom_env_var && ENV[custom_env_var]
 
@@ -237,13 +237,13 @@ module Issuer
         end
 
         # GraphQL helper methods
-        def resolve_issue_type(repo, type_name)
+        def resolve_issue_type repo, type_name
           issue_types = get_issue_types(repo)
           issue_type = issue_types.find { |type| type['name'].downcase == type_name.downcase }
           issue_type&.[]('id')
         end
 
-        def get_repository_id(owner, name)
+        def get_repository_id owner, name
           query = <<~GRAPHQL
             query GetRepository($owner: String!, $name: String!) {
               repository(owner: $owner, name: $name) {
@@ -256,14 +256,14 @@ module Issuer
           result['data']['repository']['id']
         end
 
-        def resolve_label_ids(repo, label_names)
+        def resolve_label_ids repo, label_names
           # For now, we'll skip complex label ID resolution
           # GitHub GraphQL API requires label IDs, but REST API uses names
           # This is a simplification - in practice, you'd need to fetch and match labels
           []
         end
 
-        def get_user_id(username)
+        def get_user_id username
           query = <<~GRAPHQL
             query GetUser($login: String!) {
               user(login: $login) {
@@ -276,7 +276,7 @@ module Issuer
           result['data']['user']['id']
         end
 
-        def execute_graphql_query(query, variables = {})
+        def execute_graphql_query query, variables = {}
           uri = URI.parse("https://api.github.com/graphql")
           request = Net::HTTP::Post.new(uri)
           request.content_type = "application/json"

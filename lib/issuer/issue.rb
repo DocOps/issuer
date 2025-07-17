@@ -325,7 +325,7 @@ module Issuer
     #     - urgent
     #   assignee:   developer1
     #   ------
-    def formatted_output(site, repo)
+    def formatted_output site, repo
       # Get site-specific field mappings
       field_map = site.field_mappings
       
@@ -397,7 +397,7 @@ module Issuer
     # @example
     #   wrap_line_with_indentation("This is a very long line that needs wrapping", 4)
     #   # => ["    This is a very long line that needs", "    wrapping"]
-    def wrap_line_with_indentation(line, indent_size)
+    def wrap_line_with_indentation line, indent_size
       # Get terminal width, default to 80 if not available
       terminal_width = ENV['COLUMNS']&.to_i || 80
       

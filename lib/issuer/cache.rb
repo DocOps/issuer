@@ -32,7 +32,7 @@ module Issuer
       FileUtils.mkdir_p(logs_dir) unless Dir.exist?(logs_dir)
     end
 
-    def run_log_file(run_id)
+    def run_log_file run_id
       File.join(logs_dir, "#{run_id}.json")
     end
 
@@ -43,7 +43,7 @@ module Issuer
     end
 
     # Run tracking
-    def start_run(metadata = {})
+    def start_run metadata = {}
       ensure_cache_directories
 
       run_id = generate_run_id
@@ -68,7 +68,7 @@ module Issuer
       run_id
     end
 
-    def complete_run(run_id, issues_processed = nil)
+    def complete_run run_id, issues_processed = nil
       run_data = load_run_log(run_id)
       return unless run_data
 
@@ -89,7 +89,7 @@ module Issuer
       save_run_log(run_id, run_data)
     end
 
-    def fail_run(run_id, error_message)
+    def fail_run run_id, error_message
       run_data = load_run_log(run_id)
       return unless run_data
 
@@ -105,19 +105,19 @@ module Issuer
     end
 
     # Artifact tracking
-    def log_issue_created(run_id, issue_data)
+    def log_issue_created run_id, issue_data
       log_artifact(run_id, :issues, issue_data)
     end
 
-    def log_milestone_created(run_id, milestone_data)
+    def log_milestone_created run_id, milestone_data
       log_artifact(run_id, :milestones, milestone_data)
     end
 
-    def log_label_created(run_id, label_data)
+    def log_label_created run_id, label_data
       log_artifact(run_id, :labels, label_data)
     end
 
-    def log_artifact(run_id, type, artifact_data)
+    def log_artifact run_id, type, artifact_data
       run_data = load_run_log(run_id)
       return unless run_data
 
@@ -150,11 +150,11 @@ module Issuer
     end
 
     # Data persistence
-    def save_run_log(run_id, data)
+    def save_run_log run_id, data
       File.write(run_log_file(run_id), JSON.pretty_generate(data))
     end
 
-    def load_run_log(run_id)
+    def load_run_log run_id
       log_file = run_log_file(run_id)
       return nil unless File.exist?(log_file)
 
@@ -165,7 +165,7 @@ module Issuer
     end
 
     # Query and listing
-    def list_runs(status: nil, limit: nil)
+    def list_runs status: nil, limit: nil
       ensure_cache_directories
 
       log_files = Dir.glob(File.join(logs_dir, '*.json'))
@@ -185,11 +185,11 @@ module Issuer
       limit ? runs.take(limit) : runs
     end
 
-    def get_run(run_id)
+    def get_run run_id
       load_run_log(run_id)
     end
 
-    def delete_run_log(run_id)
+    def delete_run_log run_id
       log_file = run_log_file(run_id)
       File.delete(log_file) if File.exist?(log_file)
     end
