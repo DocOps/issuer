@@ -172,7 +172,6 @@ module Issuer
 
       Site Options:
         --proj org/repo          #{self.class_options[:proj].description}
-        --tokenv VAR_NAME        #{self.class_options[:tokenv].description}
 
       Mode Options:
         --dry, --dry-run         #{self.class_options[:dry].description}
@@ -184,7 +183,7 @@ module Issuer
 
       Info:
         -h, --help               #{self.class_options[:help].description}
-        -v, --version            #{self.class_options[:version].description}
+        --version                Show version
 
       Examples:
         issuer issues.yml --dry
@@ -196,7 +195,6 @@ module Issuer
 
       Authentication:
       Set GITHUB_TOKEN environment variable with your GitHub personal access token
-      Or use --tokenv to specify a custom environment variable name
 
       HELP
     end
