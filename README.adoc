@@ -210,76 +210,77 @@ The IMYML format will be standardized and formally specified in a future release
 [[imyml-ref]]
 ==== IMYML Properties Reference
 
-`$meta`::
+$meta::
 Optional block for establishing operation-wide modes and settings.
 
-`$meta.proj`:::
+$meta.proj:::
 (String)
 Designates the target project/repository.
 
-`$meta.defaults`:::
-Designates the default values to use for any issue record that does not specify a value for a given property.
+$meta.defaults:::
+Properties in this block establish the default values to be used for any issue record that does not specify a value for the given property.
 
-`$meta.defaults.vrsn`::::
+$meta.defaults.vrsn::::
 (String)
 Sets default version or milestone for all issues.
 
-`$meta.defaults.user`::::
+$meta.defaults.user::::
 (String)
 Sets default assignee (GitHub username).
 
-`$meta.defaults.type`::::
+$meta.defaults.type::::
 (String)
 Sets default issue type to apply to all issues when no `type` property is specified in the issue record.
 
-`$meta.defaults.tags`::::
+$meta.defaults.tags::::
 (Array):
 Labels to append to issues (comma-separated).
 {append_or_impose}
 
-`$meta.defaults.stub`::::
+$meta.defaults.stub::::
 (Boolean)
 Establishes the state whether to insert stub texts (`body` / `head` / `tail`).
 
-`$meta.defaults.body`::::
+$meta.defaults.body::::
 (String)
 Sets default body text to apply to all issues when no `body` property is specified in the issue record.
 
-`$meta.defaults.head`::::
+$meta.defaults.head::::
 (String)
 Sets default text to insert before the body of all issues for which `stub`.
 
-`$meta.defaults.tail`::::
+$meta.defaults.tail::::
 (String)
 Sets default text to insert after the body of all issues for which `stub`.
 
-`issues`::
-(Array) Tabular listing of issue records as Array items.
+issues::
+(Array)
+Tabular listing of *issue records* as Array items.
 If an item is Scalar (not a Map with named keys), the value must be a String and it will be treated as the `summ` (summary/title) property.
 +
 Otherwise, any `issues` Array items must be Map-formatted "`dictionaries`" with the following properties:
 
-`summ`:::
+summ:::
 (String, *required*)
 A one-line title or summary of the issue.
 
-`body`:::
+body:::
 (String)
 The main body or description text for the issue.
 Defaults to `$meta.defaults.body` if `stub == true` for the record, in which case, upon submission, will also incorporate any values for `$meta.defaults.head` and `$meta.defaults.tail`.
 
-`vrsn`:::
+vrsn:::
 (String)
 The milestone associated with the issue.
 +
 Defaults to `$meta.defaults.vrsn` or else `null`.
 
-`type`:::
+type:::
 (String)
 The type of issue, which must already be registered in the target project or repository.
 Defaults to `$meta.defaults.type` or else `null`.
 
-`tags`:::
+tags:::
 (Array of Strings)
 A listing of specific labels to assign to the issue.
 +
@@ -291,11 +292,11 @@ Supports special prefix notation for label management:
 +
 Example: `tags: [documentation, +critical, -needs:review]` would add `documentation` and `critical` labels while removing any `needs:review` label from defaults.
 
-`user`:::
+user:::
 (String)
 The system username of the person or bot to which the ticket is assigned.
 
-`stub [true+++*+++|false]`:::
+stub [true+++*+++|false]:::
 (Boolean)
 Whether to treat the issue as a stub entry, meaning prepend any `$meta.defaults.head` text or append any `$meta.defaults.tail` text, and in case the ticket has no `body` property, insert the text of `$meta.defaults.body`.
 
