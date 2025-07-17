@@ -219,6 +219,42 @@ RSpec.describe Issuer::Issue do
       
       expect(output).not_to include('repo:')
     end
+    
+    it 'properly handles long lines in body by wrapping with maintained indentation' do
+      long_line = 'This is a very long line that should wrap properly when displayed in the terminal to avoid the issue where wrapped lines go all the way to the left margin instead of maintaining proper indentation for readability.'
+      issue_data = { 'summ' => 'Test Issue', 'body' => long_line }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      # Check that body is present
+      expect(output).to include('body:')
+      
+      # Check that long lines are wrapped with proper indentation
+      body_lines = output.split("\n").select { |line| line.start_with?('            ') }
+      expect(body_lines.length).to be > 1  # Should have multiple wrapped lines
+      
+      # All body content lines should start with the proper indentation
+      body_lines.each do |line|
+        expect(line).to start_with('            ')  # 12 spaces indentation
+      end
+    end
+    
+    it 'handles multi-line body content with proper indentation' do
+      multi_line_body = "First line of the body.\nSecond line which is also quite long and should maintain proper indentation when displayed.\nThird line."
+      issue_data = { 'summ' => 'Test Issue', 'body' => multi_line_body }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      # Should have proper indentation for all lines
+      body_lines = output.split("\n").select { |line| line.start_with?('            ') }
+      expect(body_lines.length).to be >= 3  # At least 3 lines (may be more if wrapping occurs)
+      
+      # Check that original line breaks are preserved
+      expect(output).to include('            First line of the body.')
+      expect(output).to include('            Third line.')
+    end
   end
 
   describe '.from_array' do
