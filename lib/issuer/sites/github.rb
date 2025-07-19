@@ -2,6 +2,7 @@
 
 require 'octokit'
 require_relative 'base'
+require_relative '../apis/github/client'
 
 module Issuer
   module Sites
@@ -14,6 +15,7 @@ module Issuer
         # Skip authentication validation for dry-run mode
         if @token == 'dry-run-token'
           @client = nil
+          @octokit_client = nil
           return
         end
 
@@ -22,8 +24,11 @@ module Issuer
           raise Issuer::Error, "GitHub token not found. Set #{env_vars.join(', ')} environment variable."
         end
 
-        @client = Octokit::Client.new(access_token: @token)
-        @client.auto_paginate = true
+        # Create our enhanced API client that supports GraphQL
+        @client = Issuer::APIs::GitHub::Client.new(token: @token)
+        # Keep the Octokit client for non-issue operations
+        @octokit_client = Octokit::Client.new(access_token: @token)
+        @octokit_client.auto_paginate = true
       end
 
       def site_name
@@ -41,6 +46,7 @@ module Issuer
           milestone: 'milestone', # site_params[:milestone] displays as "milestone:"
           labels: 'labels',      # site_params[:labels] displays as "labels:"
           assignee: 'assignee',  # site_params[:assignee] displays as "assignee:"
+          type: 'type',          # site_params[:type] displays as "type:"
           project_name: 'repo'   # For summary messages: "repo: owner/name"
         }
       end
@@ -83,7 +89,12 @@ module Issuer
           end
         end
 
-        created_issue = @client.create_issue(proj, params[:title], params[:body], params)
+        # Handle type
+        if issue_params[:type]
+          params[:type] = issue_params[:type]
+        end
+
+        created_issue = @client.create_issue(proj, params)
 
         # Extract relevant data for potential cleanup tracking
         issue_data = {
@@ -101,13 +112,13 @@ module Issuer
       end
 
       def get_versions proj
-        @client.milestones(proj, state: 'all')
+        @octokit_client.milestones(proj, state: 'all')
       rescue Octokit::Error => e
         raise Issuer::Error, "Failed to fetch milestones: #{e.message}"
       end
 
       def get_tags proj
-        @client.labels(proj)
+        @octokit_client.labels(proj)
       rescue Octokit::Error => e
         raise Issuer::Error, "Failed to fetch labels: #{e.message}"
       end
@@ -116,7 +127,7 @@ module Issuer
         description = options[:description] || "Created by issuer CLI"
 
         # Call create_milestone with proper parameters
-        created_milestone = @client.create_milestone(proj, version_name, description: description)
+        created_milestone = @octokit_client.create_milestone(proj, version_name, description: description)
 
         # Add the newly created milestone to our cache for immediate availability
         @milestone_cache[proj] ||= []
@@ -142,7 +153,7 @@ module Issuer
         description = options[:description]
 
         # Call add_label with proper parameters
-        created_label = @client.add_label(proj, tag_name, color, description: description)
+        created_label = @octokit_client.add_label(proj, tag_name, color, description: description)
 
         # Return tracking data
         {
@@ -161,26 +172,26 @@ module Issuer
 
       # Cleanup methods
       def close_issue proj, issue_number
-        @client.close_issue(proj, issue_number)
+        @octokit_client.close_issue(proj, issue_number)
       rescue Octokit::Error => e
         raise Issuer::Error, "Failed to close issue ##{issue_number}: #{e.message}"
       end
 
       def delete_milestone proj, milestone_number
-        @client.delete_milestone(proj, milestone_number)
+        @octokit_client.delete_milestone(proj, milestone_number)
       rescue Octokit::Error => e
         raise Issuer::Error, "Failed to delete milestone ##{milestone_number}: #{e.message}"
       end
 
       def delete_label proj, label_name
-        @client.delete_label!(proj, label_name)
+        @octokit_client.delete_label!(proj, label_name)
       rescue Octokit::Error => e
         raise Issuer::Error, "Failed to delete label '#{label_name}': #{e.message}"
       end
 
       def validate_configuration
         # Test API access
-        @client.user
+        @octokit_client.user
         true
       rescue Octokit::Error => e
         raise Issuer::Error, "GitHub authentication failed: #{e.message}"
@@ -223,6 +234,11 @@ module Issuer
               puts "⚠️  Warning: Milestone '#{issue.vrsn}' not found even after validation for issue '#{issue.summ}'"
             end
           end
+        end
+
+        # Handle type
+        if issue.type && !issue.type.strip.empty?
+          params[:type] = issue.type.strip
         end
 
         params

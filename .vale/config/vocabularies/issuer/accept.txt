@@ -57,7 +57,7 @@ DocOps
 docopslab
 
 # Proper nouns
-JIRA
+Jira
 OAuth
 README
 roadmap

@@ -6,6 +6,7 @@ $meta:
   defaults:
     vrsn: 0.1.0
     user: project-lead
+    type: Task
     tags: [project-setup, +new-project]
     stub: true
     head: |
@@ -34,6 +35,7 @@ issues:
       - Set up .gitignore file
       - Add initial directory structure
       - Configure repository settings and permissions
+    type: Epic
     tags: [infrastructure, repository]
     user: devops-lead
 
@@ -110,6 +112,7 @@ issues:
       - Static code analysis for security issues
       - Secrets management setup
       - Security policy documentation
+    type: Story
     tags: [security, compliance, +critical]
     user: security-team
 

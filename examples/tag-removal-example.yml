@@ -1,0 +1,41 @@
+# Tag Removal Example - Issue #4 Implementation
+# 
+# This example demonstrates the new tag removal functionality where
+# tags prefixed with '-' are removed from the default/appended tags list.
+
+$meta:
+  proj: myorg/myrepo
+  defaults:
+    tags: [+posted-by-issuer, needs:label, +needs:docs]
+
+issues:
+  - summ: Fix misstatement in the README
+    body: |
+      Correct that really bad typo on the first paragraph.
+      No docs needed for this change since it's a docs change.
+    tags: [documentation, -needs:docs]
+  
+  - summ: Issue that will be fixed immediately
+    tags: 
+      - '-needs:label'
+
+  - summ: Complex issue with multiple tag operations
+    body: |
+      This issue demonstrates multiple tag operations:
+      - Adds bug and enhancement tags
+      - Removes the default needs:label tag
+      - Removes the appended needs:docs tag
+      - Keeps the posted-by-issuer tag (append)
+    tags: [bug, enhancement, -needs:label, -needs:docs]
+    
+  - summ: Issue with no custom tags
+    body: |
+      This issue has no custom tags, so it gets all default tags
+      including both regular defaults and append tags.
+    # No tags specified - gets all defaults
+    
+  - summ: Issue that only removes tags
+    body: |
+      This issue only removes tags, so it gets default tags
+      minus the removed ones.
+    tags: [-needs:docs]

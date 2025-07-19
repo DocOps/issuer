@@ -15,6 +15,7 @@ module Issuer
   # +tags+:: Array of labels to apply
   # +user+:: Assignee username
   # +vrsn+:: Milestone/version
+  # +type+:: Issue type (e.g., Bug, Feature, Task)
   # +stub+:: Whether to apply stub text composition
   #
   # == Tag Logic
@@ -22,6 +23,7 @@ module Issuer
   # Tags support special prefix notation:
   # * Regular tags (e.g., +"bug"+) are only applied if the issue has no existing tags
   # * Append tags (e.g., +"+urgent"+) are always applied to all issues
+  # * Removal tags (e.g., +"-needs:docs"+) are removed from the default/appended tags list
   #
   # == Stub Composition
   #
@@ -50,7 +52,7 @@ module Issuer
   #   valid_issues = Issuer::Issue.valid_issues_from_array(array_of_data, defaults)
   #
   class Issue
-    attr_reader :summ, :tags, :user, :vrsn, :raw_data
+    attr_reader :summ, :tags, :user, :vrsn, :type, :raw_data
     attr_accessor :body, :stub
 
     ##
@@ -60,7 +62,12 @@ module Issuer
     # @param defaults [Hash] Default values to apply when issue data is missing properties
     #
     def initialize issue_data, defaults={}
-      @raw_data = issue_data || {}
+      # Handle string issues (simple format where string is the summary)
+      if issue_data.is_a?(String)
+        @raw_data = { 'summ' => issue_data }
+      else
+        @raw_data = issue_data || {}
+      end
       @defaults = defaults
       
       # For most fields, issue data overrides defaults
@@ -68,6 +75,7 @@ module Issuer
       @body = @raw_data['body'] || @raw_data['desc'] || defaults['body'] || defaults['desc'] || '' # Support both body and desc (legacy)
       @user = @raw_data['user'] || defaults['user']
       @vrsn = @raw_data['vrsn'] || defaults['vrsn']
+      @type = @raw_data['type'] || defaults['type']
       @stub = @raw_data.key?('stub') ? @raw_data['stub'] : defaults['stub']
       
       # For tags, we need special handling - combine defaults and issue tags for later processing
@@ -162,28 +170,32 @@ module Issuer
 
     # Apply tag logic for this issue
     # 
-    # Processes existing tags with + prefix as append tags, combines them with
-    # CLI-provided tags, and determines final tag set based on precedence rules.
+    # Processes existing tags with + prefix as append tags, - prefix as removal tags,
+    # combines them with CLI-provided tags, and determines final tag set based on precedence rules.
     # 
     # @param cli_append_tags [Array<String>] Tags to always append from CLI
     # @param cli_default_tags [Array<String>] Default tags from CLI (used when no regular tags exist)
     # @return [void] Sets @tags instance variable
     # 
     # @example
-    #   # Issue has tags: ['+urgent', 'bug']
-    #   issue.apply_tag_logic(['cli-tag'], ['default-tag'])
-    #   # Result: ['urgent', 'cli-tag', 'bug']
+    #   # Issue has tags: ['+urgent', 'bug', '-needs:docs']
+    #   issue.apply_tag_logic(['cli-tag'], ['default-tag', 'needs:docs'])
+    #   # Result: ['urgent', 'cli-tag', 'bug', 'default-tag'] (needs:docs removed)
     def apply_tag_logic cli_append_tags, cli_default_tags
-      # Parse existing tags for + prefix
+      # Parse existing tags for + and - prefixes
       existing_tags = tags || []
       append_tags = []
       regular_tags = []
+      remove_tags = []
 
       existing_tags.each do |tag|
-        if tag.to_s.start_with?('+')
-          append_tags << tag.to_s[1..] # Remove + prefix
+        tag_str = tag.to_s
+        if tag_str.start_with?('+')
+          append_tags << tag_str[1..] # Remove + prefix
+        elsif tag_str.start_with?('-')
+          remove_tags << tag_str[1..] # Remove - prefix
         else
-          regular_tags << tag.to_s
+          regular_tags << tag_str
         end
       end
 
@@ -192,7 +204,7 @@ module Issuer
       final_tags = append_tags + defaults_append_tags + cli_append_tags
 
       # For regular tags, add issue's own tags, otherwise use default tags
-      issue_regular_tags = Array(@raw_data['tags']).reject { |tag| tag.to_s.start_with?('+') }
+      issue_regular_tags = Array(@raw_data['tags']).reject { |tag| tag.to_s.start_with?('+') || tag.to_s.start_with?('-') }
 
       if !issue_regular_tags.empty?
         # Issue has its own regular tags, use them
@@ -200,13 +212,19 @@ module Issuer
       else
         # Issue has no regular tags, use defaults from CLI
         final_tags.concat(cli_default_tags)
-        # Also add non-append defaults tags
+        # Also add non-append defaults tags (- prefix ignored in defaults)
         defaults_regular_tags = Array(@defaults['tags']).reject { |tag| tag.to_s.start_with?('+') }
         final_tags.concat(defaults_regular_tags)
       end
 
-      # Set the final tags (removing duplicates)
-      @tags = final_tags.uniq
+      # Collect removal tags from issue only (not defaults)
+      all_remove_tags = remove_tags
+      
+      # Remove duplicates first, then remove tags specified for removal
+      final_tags = final_tags.uniq - all_remove_tags
+      
+      # Set the final tags
+      @tags = final_tags
     end
 
     # Apply stub logic for this issue
@@ -252,7 +270,8 @@ module Issuer
     # 
     # Separates tags with + prefix (append tags) from regular tags (default tags).
     # Tags with + prefix are always applied, while regular tags are only used
-    # when the issue has no existing regular tags.
+    # when the issue has no existing regular tags. Tags with - prefix are handled
+    # in the apply_tag_logic method for removal.
     # 
     # @param tags_string [String] Comma-separated tag string
     # @return [Array<Array<String>>] Two-element array: [append_tags, default_tags]
@@ -299,14 +318,14 @@ module Issuer
     #               Users cannot log in properly after the recent update.
     #               This affects all user accounts.
     #   
-    #   repo:       myorg/myproject
+    #   type:       Bug
     #   milestone:  1.0.0
     #   labels:
     #     - bug
     #     - urgent
     #   assignee:   developer1
     #   ------
-    def formatted_output(site, repo)
+    def formatted_output site, repo
       # Get site-specific field mappings
       field_map = site.field_mappings
       
@@ -323,17 +342,22 @@ module Issuer
       if site_params[:body] && !site_params[:body].strip.empty?
         body_field = field_map[:body] || 'body'
         output << "#{body_field}:"
-        # Indent body content
+        # Indent body content with proper line wrapping
         body_lines = site_params[:body].strip.split("\n")
         body_lines.each do |line|
-          output << "            #{line}"
+          wrapped_lines = wrap_line_with_indentation(line, 12)
+          wrapped_lines.each do |wrapped_line|
+            output << wrapped_line
+          end
         end
         output << ""  # Empty line after body
       end
       
-      # Repository
-      repo_field = field_map[:repo] || 'repo'
-      output << sprintf("%-12s%s", "#{repo_field}:", repo) if repo
+      # Type
+      if site_params[:type]
+        type_field = field_map[:type] || 'type'
+        output << sprintf("%-12s%s", "#{type_field}:", site_params[:type])
+      end
       
       # Milestone/Version
       if site_params[:milestone]
@@ -364,6 +388,54 @@ module Issuer
 
     private
 
+    # Wrap a line with proper indentation, handling long lines that exceed terminal width
+    # 
+    # @param line [String] The line to wrap
+    # @param indent_size [Integer] Number of spaces for indentation
+    # @return [Array<String>] Array of wrapped lines with proper indentation
+    # 
+    # @example
+    #   wrap_line_with_indentation("This is a very long line that needs wrapping", 4)
+    #   # => ["    This is a very long line that needs", "    wrapping"]
+    def wrap_line_with_indentation line, indent_size
+      # Get terminal width, default to 80 if not available
+      terminal_width = ENV['COLUMNS']&.to_i || 80
+      
+      # Calculate available width for content (terminal width - indentation)
+      available_width = terminal_width - indent_size
+      
+      # If line fits within available width, just return it with indentation
+      if line.length <= available_width
+        return [' ' * indent_size + line]
+      end
+      
+      # Split long line into chunks that fit
+      wrapped_lines = []
+      remaining_text = line
+      
+      while remaining_text.length > available_width
+        # Find the last space before the available width limit
+        break_point = remaining_text.rindex(' ', available_width)
+        
+        # If no space found, break at the available width (hard wrap)
+        break_point = available_width if break_point.nil?
+        
+        # Extract the chunk and add it with proper indentation
+        chunk = remaining_text[0...break_point]
+        wrapped_lines << (' ' * indent_size + chunk)
+        
+        # Remove the processed chunk from remaining text
+        remaining_text = remaining_text[break_point..].lstrip
+      end
+      
+      # Add the final chunk if any text remains
+      if !remaining_text.empty?
+        wrapped_lines << (' ' * indent_size + remaining_text)
+      end
+      
+      wrapped_lines
+    end
+    
     # Determine if stub logic should be applied to this issue
     # 
     # Checks issue-level stub property first, then falls back to defaults.

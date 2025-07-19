@@ -5,6 +5,7 @@ $meta:
     vrsn: 1.0.0
     user: project-manager
     tags: [enhancement]
+    type: Task
 
 issues:
   - summ: Add user authentication
@@ -15,6 +16,7 @@ issues:
       - Password hashing
       - Session management
       - Two-factor authentication support
+    type: Feature
     tags: [security, authentication]
     user: backend-dev
 
@@ -22,6 +24,7 @@ issues:
     body: |
       The current layout breaks on mobile devices.
       Need to ensure proper responsive behavior.
+    type: Bug
     tags: [bug, ui, mobile]
     user: frontend-dev
 
