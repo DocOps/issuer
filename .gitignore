@@ -98,3 +98,8 @@ specs/data/*-issues.yml
 
 # Local scratch space for AI output
 .warp/
+
+# Docs and ReleaseHx files
+docs/releasehx/*.md
+docs/releasehx/*.adoc
+releasehx-install.sh

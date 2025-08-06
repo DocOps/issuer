@@ -578,6 +578,34 @@ The API reference includes:
 
 This documentation is automatically updated with each gem release.
 
+=== Release History Management
+
+As of version 0.2.0, the Release Notes and Changelog are generated using the _ReleaseHx_ tool, which is still in pre-release.
+You can find the release history assets in the `docs/releasehx/` directory, which contains a configuration file and the 0.2.0 "`RHYML`" file that was auto-modified and then manually edited to produce the GitHub link:https://github.com/DocOps/issuer/releases[release announcement].
+
+ReleaseHx will be available soon, but for now the following is only usable by DocOps Lab.
+
+. Add local releasehx gem to `Gemfile`:
++
+[source,ruby]
+gem 'releasehx', path: '../releasehx'
+
+. Draft RHYML draft file from the online GitHub Issues for the given version:
++
+[.prompt,subs=+attributes]
+ ./releasehx-install.sh && bundle exec rhx {this_prod_vrsn} --yaml docs/releasehx/release-{this_prod_vrsn}.yml --config docs/releasehx/config.yml
++
+The `releasehx-install.sh` ensures ReleaseHx is up to date.
+
+. Manually edit the RHYML draft file.
+
+. Generate the release history as Markdown.
++
+[.prompt,subs=+attributes]
+ bundle exec rhx docs/releasehx/release-{this_prod_vrsn}.yml --md docs/releasehx/{this_prod_vrsn}.md --config docs/releasehx/config.yml
+
+. Copy and paste the contents of `docs/releasehx/{this_prod_vrsn}.md` into the GitHub release form at https://github.com/DocOps/issuer/releases/new.
+
 [[contributing]]
 === Contributing
 
