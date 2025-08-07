@@ -1,0 +1,84 @@
+code: "0.2.0"
+date: 2025-08-04
+memo:
+changes:
+
+  - chid: 21-fixed-jira-refere
+    tick: 21
+    type: bugfix
+    part: documentation
+    summ: Fixed JIRA references (Jira)
+    lead: briandominick
+
+  - chid: 29-option-alias-v-t
+    tick: 29
+    type: deprecation
+    part: cli
+    summ: Option alias -v to be removed in 1.0.0
+    note: |
+      The CLI option `-v`, which is an alias for the option `--version`, is to be removed in the version 1.0.0 release. This option conflicts with options typically used in our other CLI utilities for different purposes.
+    tags:
+      - deprecation
+
+  - chid: 26-option-tokenv-t
+    tick: 26
+    type: deprecation
+    part: cli
+    summ: Option --tokenv to be removed in 1.0.0
+    note: |
+      The clever but ultimately redundant CLI option `--tokenv ENV_VAR_NAME` will be removed in the 1.0.0 release. Use an inline environment variable by aliasing it to a supported keyname, such as `ISSUER_API_KEY=$MY_GITHUB_TOKEN issuer issues.yml`.
+    tags:
+      - deprecation
+
+  - chid: 6-fixed-examples-li
+    tick: 6
+    type: bugfix
+    summ: Fixed examples link in README
+    lead: briandominick
+
+  - chid: 5-fixed-tail-text-i
+    tick: 5
+    type: bugfix
+    part: imyml
+    summ: Fixed tail-text imposition
+    lead: briandominick
+
+  - chid: 8-handled-long-line
+    tick: 8
+    type: improvement
+    part: cli
+    summ: Handled long-line wrapping in dry-run output
+    lead: briandominick
+
+  - chid: 7-reviewed-and-upda
+    tick: 7
+    type: improvement
+    part: documentation
+    summ: Reviewed and updated README
+    lead: briandominick
+
+  - chid: 4-enabled-removal-of
+    tick: 4
+    type: improvement
+    part: imyml
+    summ: Enabled removal of default/added tag/label from issues in IMYML
+    note: |
+      Users may now append tags to existing tags lists by establishing them in the `$meta.defaults.tags` Array, prepended with the `+` character.
+    lead: briandominick
+
+  - chid: 3-added-type-prop
+    tick: 3
+    type: feature
+    part: imyml
+    summ: Added 'type' property to issue mapping and defaults
+    note: |
+      A new `type` property of the IMYML definition structure has been added to accommodate GitHub's new issue-typing system. This change adds support for GH's GraphQL API, as that was the only way to create new issue items with `type` metadata.
+    lead: briandominick
+
+  - chid: added-releasehx-support
+    type: feature
+    part: documentation
+    summ: Added ReleaseHx support for generating release history
+    note: |
+      This release of issuer was delayed a few weeks while I worked on its sibling app, ReleaseHx, which is still pre-release but was used to fetch data from the GitHub Issues API and generate the release history you are reading now.
+    tags: [internal]

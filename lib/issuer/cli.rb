@@ -15,7 +15,7 @@ module Issuer
     class_option :proj, type: :string, desc: 'Override $meta.proj (org/repo)'
     class_option :vrsn, type: :string, desc: 'Default version for all issues'
     class_option :user, type: :string, desc: 'Default assignee (GitHub username)'
-    class_option :tags, type: :string, desc: 'Comma-separated extra labels for all issues'
+    class_option :tags, type: :string, desc: 'Comma-separated default or appended (+) labels for all issues'
     class_option :stub, type: :boolean, desc: 'Enable stub mode for all issues'
     class_option :dry, type: :boolean, default: false, aliases: ['--dry-run'], desc: 'Print issues, don\'t post'
     class_option :tokenv, type: :string, desc: 'Name of environment variable containing GitHub token'
@@ -167,12 +167,11 @@ module Issuer
       Issue Default Options:
         --vrsn VERSION           #{self.class_options[:vrsn].description}
         --user USERNAME          #{self.class_options[:user].description}
-        --tags tag1,tag2         #{self.class_options[:tags].description}
+        --tags tag1,+tag2        #{self.class_options[:tags].description}
         --stub                   #{self.class_options[:stub].description}
 
       Site Options:
         --proj org/repo          #{self.class_options[:proj].description}
-        --tokenv VAR_NAME        #{self.class_options[:tokenv].description}
 
       Mode Options:
         --dry, --dry-run         #{self.class_options[:dry].description}
@@ -184,7 +183,7 @@ module Issuer
 
       Info:
         -h, --help               #{self.class_options[:help].description}
-        -v, --version            #{self.class_options[:version].description}
+        --version                Show version
 
       Examples:
         issuer issues.yml --dry
@@ -196,7 +195,6 @@ module Issuer
 
       Authentication:
       Set GITHUB_TOKEN environment variable with your GitHub personal access token
-      Or use --tokenv to specify a custom environment variable name
 
       HELP
     end

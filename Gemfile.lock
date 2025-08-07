@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    issuer (0.1.1)
+    issuer (0.2.0)
       faraday-retry (~> 2.0)
       octokit (~> 8.0)
       thor (~> 1.0)

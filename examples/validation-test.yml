@@ -1,8 +1,10 @@
 issues:
   - summ: Test milestone validation
     desc: This issue has a milestone that probably doesn't exist
+    type: Bug
     vrsn: test-milestone-v1.0
     tags: [test-label-1, existing-bug]
   - summ: Test label validation  
     desc: This issue has labels that probably don't exist
+    type: Task
     tags: [test-label-2, test-label-3, enhancement]

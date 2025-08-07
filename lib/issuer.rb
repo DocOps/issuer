@@ -25,7 +25,7 @@ require_relative "issuer/cli"
 # * Configurable defaults and label application logic
 # * Environment variable support for authentication
 # * Issue validation with helpful error messages
-# * Extensible architecture for multiple platforms (GitHub, JIRA, GitLab, etc.)
+# * Extensible architecture for multiple platforms (GitHub, Jira, GitLab, etc.)
 # * Run logging and artifact tracking for cleanup operations
 #
 # == Quick Start
@@ -81,7 +81,7 @@ module Issuer
     # @param site [Issuer::Sites::Base, nil] Custom site adapter. If nil, will auto-detect.
     # @param cache [Boolean] Whether to enable run tracking and caching (default: true)
     #
-    def initialize(site: nil, cache: true)
+    def initialize site: nil, cache: true
       @site = site
       @cache_enabled = cache
     end
@@ -107,7 +107,7 @@ module Issuer
     #                                    automation_options: { auto_metadata: true })
     #   puts "Created #{results[:issues_created]} issues"
     #
-    def process_file(file_path, proj: nil, dry_run: false, automation_options: {})
+    def process_file file_path, proj: nil, dry_run: false, automation_options: {}
       require 'yaml'
 
       unless File.exist?(file_path)
@@ -134,7 +134,7 @@ module Issuer
     # @return [Hash] Results including created issues, milestones, labels, and run metadata
     # @raise [Issuer::Error] If data is invalid or processing fails
     #
-    def process_data(data, proj: nil, dry_run: false, automation_options: {})
+    def process_data data, proj: nil, dry_run: false, automation_options: {}
       # Extract metadata and issues
       meta = data['$meta'] || {}
       issues_data = data['issues'] || data
@@ -176,7 +176,7 @@ module Issuer
       @site ||= Sites::Factory.create(Sites::Factory.default_site)
     end
 
-    def perform_dry_run(issues, repo)
+    def perform_dry_run issues, repo
       site = Sites::Factory.create('github', token: 'dry-run-token')
 
       puts "🧪 DRY RUN - No issues will be created"
@@ -201,7 +201,7 @@ module Issuer
       }
     end
 
-    def perform_live_run(issues, repo, automation_options)
+    def perform_live_run issues, repo, automation_options
       site = get_site
 
       # Start run tracking if caching enabled

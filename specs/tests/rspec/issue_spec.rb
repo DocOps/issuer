@@ -156,6 +156,105 @@ RSpec.describe Issuer::Issue do
       
       expect(params[:milestone]).to eq(2)
     end
+    
+    it 'includes type in site params when type is present' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params[:type]).to eq('Bug')
+    end
+
+    it 'excludes type from site params when type is nil' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params).not_to have_key(:type)
+    end
+
+    it 'strips whitespace from type' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => '  Bug  ' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params[:type]).to eq('Bug')
+    end
+
+    it 'excludes type when type is empty string' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => '   ' }
+      issue = described_class.new(issue_data)
+      
+      params = github_site.convert_issue_to_site_params(issue, "test/repo", dry_run: true)
+      
+      expect(params).not_to have_key(:type)
+    end
+
+    it 'displays type in formatted output when present' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).to include('type:       Bug')
+    end
+
+    it 'omits type from formatted output when absent' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).not_to include('type:')
+    end
+
+    it 'does not display repo field in formatted output' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      expect(output).not_to include('repo:')
+    end
+    
+    it 'properly handles long lines in body by wrapping with maintained indentation' do
+      long_line = 'This is a very long line that should wrap properly when displayed in the terminal to avoid the issue where wrapped lines go all the way to the left margin instead of maintaining proper indentation for readability.'
+      issue_data = { 'summ' => 'Test Issue', 'body' => long_line }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      # Check that body is present
+      expect(output).to include('body:')
+      
+      # Check that long lines are wrapped with proper indentation
+      body_lines = output.split("\n").select { |line| line.start_with?('            ') }
+      expect(body_lines.length).to be > 1  # Should have multiple wrapped lines
+      
+      # All body content lines should start with the proper indentation
+      body_lines.each do |line|
+        expect(line).to start_with('            ')  # 12 spaces indentation
+      end
+    end
+    
+    it 'handles multi-line body content with proper indentation' do
+      multi_line_body = "First line of the body.\nSecond line which is also quite long and should maintain proper indentation when displayed.\nThird line."
+      issue_data = { 'summ' => 'Test Issue', 'body' => multi_line_body }
+      issue = described_class.new(issue_data)
+      
+      output = issue.formatted_output(github_site, 'test/repo')
+      
+      # Should have proper indentation for all lines
+      body_lines = output.split("\n").select { |line| line.start_with?('            ') }
+      expect(body_lines.length).to be >= 3  # At least 3 lines (may be more if wrapping occurs)
+      
+      # Check that original line breaks are preserved
+      expect(output).to include('            First line of the body.')
+      expect(output).to include('            Third line.')
+    end
   end
 
   describe '.from_array' do
@@ -286,6 +385,78 @@ RSpec.describe Issuer::Issue do
           expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-default', 'needs-label')
         end
       end
+      
+      context 'with removal tags (-prefix)' do
+        it 'removes tags specified with - prefix from issue tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'bug')
+          expect(issue.tags).not_to include('needs-label')
+        end
+        
+        it 'removes append tags specified with - prefix' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-posted-by-issuer'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('bug')
+          expect(issue.tags).not_to include('posted-by-issuer')
+        end
+        
+        it 'handles multiple removal tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', 'enhancement', '-needs-label', '-posted-by-issuer'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('bug', 'enhancement')
+          expect(issue.tags).not_to include('needs-label', 'posted-by-issuer')
+        end
+        
+        it 'handles removal tags when no matching tags exist' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-nonexistent-tag'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'bug')
+        end
+        
+        it 'processes removal tags with CLI tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['bug', '-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic(['cli-urgent'], ['cli-default'])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'cli-urgent', 'bug')
+          expect(issue.tags).not_to include('needs-label')
+        end
+        
+        it 'handles colon-separated tags in removal (needs:docs example)' do
+          defaults_with_colon = { 'tags' => ['+posted-by-issuer', 'needs:docs', 'needs:label'] }
+          issue_data = { 'summ' => 'Test', 'tags' => ['documentation', '-needs:docs'] }
+          issue = described_class.new(issue_data, defaults_with_colon)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer', 'documentation')
+          expect(issue.tags).not_to include('needs:docs')
+        end
+        
+        it 'handles string format removal tags' do
+          issue_data = { 'summ' => 'Test', 'tags' => ['-needs-label'] }
+          issue = described_class.new(issue_data, defaults)
+          
+          issue.apply_tag_logic([], [])
+          
+          expect(issue.tags).to contain_exactly('posted-by-issuer')
+          expect(issue.tags).not_to include('needs-label')
+        end
+      end
     end
     
     describe '.parse_tag_logic' do
@@ -358,6 +529,36 @@ RSpec.describe Issuer::Issue do
       issue = described_class.new(issue_data)
       expect { issue.body = 'Modified body' }.not_to raise_error
       expect(issue.body).to eq('Modified body')
+    end
+
+    it 'supports type field' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      issue = described_class.new(issue_data)
+      
+      expect(issue.type).to eq('Bug')
+    end
+
+    it 'uses default type when issue data has no type' do
+      issue_data = { 'summ' => 'Test Issue' }
+      defaults = { 'type' => 'Feature' }
+      issue = described_class.new(issue_data, defaults)
+      
+      expect(issue.type).to eq('Feature')
+    end
+
+    it 'prefers issue type over default type' do
+      issue_data = { 'summ' => 'Test Issue', 'type' => 'Bug' }
+      defaults = { 'type' => 'Feature' }
+      issue = described_class.new(issue_data, defaults)
+      
+      expect(issue.type).to eq('Bug')
+    end
+
+    it 'handles nil type gracefully' do
+      issue_data = { 'summ' => 'Test Issue' }
+      issue = described_class.new(issue_data)
+      
+      expect(issue.type).to be_nil
     end
   end
 end

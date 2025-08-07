@@ -5,14 +5,12 @@
 /lib/bundler/man/
 
 # RSpec
-/spec/reports/
-/spec/examples.txt
 .rspec_status
 
 # Test coverage
 /coverage/
 
-# Environment variables
+# Environment variable files
 .env
 .env.local
 .env.*.local
@@ -75,8 +73,8 @@ comprehensive-test.yml
 /scratch/
 
 # AI-related files
-repomix-output.yml
 repomix-output.xml
+/.warp
 
 # Test files
 test-*.yml
@@ -88,16 +86,20 @@ specs/tests/github-api/config.yml
 specs/tests/github-api/*.yml.bak
 cleanup_commands_*.sh
 
-# Run logs and cache (now stored in ~/.config/issuer/)
-# .issuer/ - removed as logs are now user-wide
+# Ephemeral specification matter
+specs/data/*-issues.yml
 
 # Outdated test directories (but not specs/tests)
 /tests/
+/spec/
 
-# Temporary documentation
-TESTING-PLAN.md
 # Vale downloaded packages (but keep project vocabularies)
 .vale/styles/
 
 # Local scratch space for AI output
 .warp/
+
+# Docs and ReleaseHx files
+docs/releasehx/*.md
+docs/releasehx/*.adoc
+releasehx-install.sh
