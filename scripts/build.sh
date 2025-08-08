@@ -19,6 +19,7 @@ check_project_root
 check_git_clean
 check_main_branch
 check_bundle_installed
+check_docker_available
 
 # Run tests
 run_rspec_tests

@@ -128,22 +128,36 @@ test_built_gem() {
     gem_file=$(ls pkg/${PROJECT_NAME}-*.gem | sort -V | tail -n1)
     echo "Testing gem file: $gem_file"
     
-    # Create temporary directory for testing
-    test_dir=$(mktemp -d)
-    cd "$test_dir"
-    gem install "../$gem_file" --user-install
+    # Get expected version from README.adoc
+    expected_version=$(get_current_version)
+    echo "Expected version: $expected_version"
     
-    if ! command -v $PROJECT_NAME &> /dev/null; then
-        echo -e "${YELLOW}⚠️  $PROJECT_NAME command not in PATH. Adding gem bin directory...${NC}"
-        export PATH="$HOME/.local/share/gem/ruby/$(ruby -e 'puts RUBY_VERSION')/bin:$PATH"
+    # Test gem installation in clean Docker environment
+    echo "Testing gem installation in clean environment (Docker)..."
+    docker run --rm -v $(pwd)/pkg:/gems ruby:3.2 bash -c "
+        gem install /gems/$(basename $gem_file) --no-document > /dev/null 2>&1
+        if [ \$? -ne 0 ]; then
+            echo 'ERROR: Gem installation failed'
+            exit 1
+        fi
+        
+        actual_version=\$(${PROJECT_NAME} --version | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+')
+        echo \"Installed version: \$actual_version\"
+        
+        if [ \"\$actual_version\" != \"$expected_version\" ]; then
+            echo \"ERROR: Version mismatch! Expected: $expected_version, Got: \$actual_version\"
+            exit 1
+        fi
+        
+        echo \"SUCCESS: Gem installed and tested successfully\"
+    "
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Gem installation test failed${NC}"
+        exit 1
     fi
     
-    # Test installed gem
-    $PROJECT_NAME --version
-    cd - > /dev/null
-    rm -rf "$test_dir"
-    
-    echo -e "${GREEN}✅ Gem built and tested successfully: $gem_file${NC}"
+    echo -e "${GREEN}✅ Gem built and tested successfully: $gem_file (version $expected_version)${NC}"
     echo "$gem_file"
 }
 
