@@ -77,46 +77,19 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    - name: Log in to DockerHub
-      uses: docker/login-action@v3
+    - name: Build Docker image (test only)
+      uses: docker/build-push-action@v5
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: docopslab/issuer
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    # - name: Build and push Docker image
-    #   uses: docker/build-push-action@v5
-    #   with:
-    #     context: .
-    #     push: true
-    #     tags: ${{ steps.meta.outputs.tags }}
-    #     labels: ${{ steps.meta.outputs.labels }}
-    #     cache-from: type=gha
-    #     cache-to: type=gha,mode=max
-
-  integration-test:
-    runs-on: ubuntu-latest
-    needs: docker-build
-    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
+        context: .
+        push: false
+        tags: docopslab/issuer:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
     - name: Test Docker image
       run: |
-        # Test the Docker image with examples
-        docker run --rm -v $(pwd):/workdir docopslab/issuer:latest issuer --version
-        docker run --rm -v $(pwd):/workdir docopslab/issuer:latest issuer --help
-        docker run --rm -v $(pwd):/workdir docopslab/issuer:latest issuer examples/minimal-example.yml --dry
+        docker run --rm -v $(pwd):/workdir docopslab/issuer:test --version
+        docker run --rm -v $(pwd):/workdir docopslab/issuer:test examples/minimal-example.yml --dry
+
+  # integration-test job removed since Docker testing is now handled in docker-build job
+  # This avoids trying to pull from DockerHub when we're doing manual publishing
