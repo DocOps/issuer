@@ -29,25 +29,23 @@ _Issuer_ lets you define all your GitHub Issues work tickets in one place as YAM
 * *Issue validation* with helpful error messages
 * *GitHub API integration*
 
-Future plans include extending this capability to *Jira*, *GitLab* Issues, GitHub *Projects*, and other services.
+Future plans include extending this capability to *Jira* (link:https://github.com/DocOps/issuer/issues/9[#9]), *GitLab* Issues (link:https://github.com/DocOps/issuer/issues/33[#33]), GitHub *Projects*, and other services.
 
 toc::[]
 
 === Who Is This For?
 
-This tool is oriented as much for _project managers_ as it is for _software developers_, but the target audience is probably *people who manage software development cycles*, especially using Git tools.
-
-So if you are a project manager, _product_ manager, technical writer or other role that participates in the _planning_ of _any_ kind of project.
+This tool is oriented as much for _project managers_ as it is for _software developers_, but the target audience is probably *people who manage software development cycles*, especially using Git tools and GitHub Issues (or soon Jira Issues and GitLab Issues).
 
 [NOTE]
-Ironically, issuer does not require be installed on your local workstation.
-The only direct use of Git would be if you commit and share the batch-configuration file with your team.
+Issuer does not require Git be installed on your local workstation.
+The only direct use of Git would be if you commit and share the batch-configuration file with your team for collective editing.
 
 This tool is great at creating "`stub`" issues for entire teams, based on user-story documents, task lists, or other planning documents.
 Once you convert such documents to our special YAML-based definition format (IMYML), use `issuer` to post them to your GitHub Issues system via GitHub's API.
 
 Individual issue entries can be as basic or as detailed as you wish.
-They may consist of as little as just a title (summary) line, or that plus an assignee responsible for filling out the rest and add metadata.
+They may consist of as little as just a title (summary) line, or that plus an assignee responsible for filling out the rest and adding metadata.
 Or they can be complete with labels, milestones, a type designation, and a complete explanation of the issue.
 
 == Installation
@@ -200,7 +198,7 @@ issues: # block for listing issues to post to cloud
 
 The `$meta` block is entirely optional, but if it is absent, your `issuer` command will need a `--proj` flag to designate the GitHub repo to which your issues should post.
 
-Only the `summ` property is required for each issue record, and issue records (Array items) that are simple strings that will be treated as summary-only.
+Only the `summ` property is required for each issue record, and issue records (Array items) that are simple strings will be treated as summary-only.
 Therefore, the following example would yield 3 tickets with unique summaries and the same body, based on `$meta.defaults.body`.
 
 Issuer will prompt the creation of tags (labels) or versions (milestones) if they do not already exist in the target repository.
@@ -485,8 +483,8 @@ I will probably adapt the API to other systems in future releases, and I welcome
 I should note up front that this is the closest I have come to "`vibe coding`" anything bigger than a local script, let alone shippable production code.
 Nevertheless, I intervened to make substantial and specific changes at least 100 times before the 0.1.0 release alone, and I rearranged major aspects of the codebase.
 
-I designed the IMYML format and the CLI up front, then I let Claud 4 (via GH Copilot) draft most of the code.
-It committed lots of rookie mistakes during this process, and it even confessed to "`cargo-cult programming`" when I pointed out it was introduing some anti-patterns.
+I designed the IMYML format and the CLI up front, then I let Claude 4 (via GH Copilot) draft most of the code.
+It committed lots of rookie mistakes during this process, and it even confessed to "`cargo-cult programming`" when I pointed out it was introducing some anti-patterns.
 
 In the end, the only thing that is mainly untouched by me are the rspec tests, which I will more fully examine and approve before any 1.0 release, but for now they'll have to do.
 
