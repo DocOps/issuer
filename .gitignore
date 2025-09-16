@@ -98,6 +98,7 @@ specs/data/*-issues.yml
 
 # Local scratch space for AI output
 .warp/
+.agent/
 
 # Docs and ReleaseHx files
 docs/releasehx/*.md
