@@ -367,6 +367,9 @@ Whether to treat all issues as stubs, meaning prepend any `$meta.defaults.head` 
 --dry, --dry-run::
 Dry-run: print actions but do not post to GitHub.
 
+--json [_FILE_PATH_]::
+Save GitHub API issue payloads as JSON files instead of posting to GitHub. Automatically enables dry-run mode. If no path is specified, saves to timestamped file in `_payloads/` directory.
+
 --auto-versions, --auto-milestones::
 Automatically create missing milestones/versions without prompting for confirmation.
 
