@@ -92,15 +92,18 @@ See <<usage>> for more.
 ==== Alias the Docker Command
 
 Optionally alias the base Docker command.
-In your shell configuration (usually `~/.bashrc` or `~/.zshrc), add the following:
+In your shell configuration (usually `~/.bashrc` or `~/.zshrc`), add the following:
 
 [.prompt,subs=+attributes]
  alias issuer='{docker_base_command}'
 
 Reload your shell configuration for the alias to take effect:
 
-[.prompt]
- source ~/.bashrc
+....
+source ~/.bashrc
+# or
+source ~/.zshrc
+....
 
 === For Ruby Users
 
