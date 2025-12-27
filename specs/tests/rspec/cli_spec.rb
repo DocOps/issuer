@@ -210,6 +210,93 @@ RSpec.describe Issuer::CLI do
       )
     end
 
+    it 'handles --json option with default path' do
+      # Mock File.write to avoid actually creating files during test
+      allow(File).to receive(:write)
+      # Mock FileUtils.mkdir_p to avoid creating directories
+      allow(FileUtils).to receive(:mkdir_p)
+      
+      expect {
+        cli = Issuer::CLI.new
+        cli.invoke(:main, [sample_file], {json: ''})
+      }.to output(/Saved 2 issue payloads to: _payloads/).to_stdout
+      
+      # Verify File.write was called with JSON content
+      expect(File).to have_received(:write) do |path, content|
+        expect(path).to match(/_payloads\/issues_\d{8}_\d{6}\.json/)
+        json_data = JSON.parse(content)
+        expect(json_data['metadata']['repository']).to eq('test/repo')
+        expect(json_data['issues'].length).to eq(2)
+      end
+    end
+    
+    it 'handles --json option with custom path' do
+      # Mock File.write to avoid actually creating files during test
+      allow(File).to receive(:write)
+      # Mock FileUtils.mkdir_p to avoid creating directories
+      allow(FileUtils).to receive(:mkdir_p)
+      
+      expect {
+        cli = Issuer::CLI.new
+        cli.invoke(:main, [sample_file], {json: 'custom-output.json'})
+      }.to output(/Saved 2 issue payloads to: custom-output.json/).to_stdout
+      
+      # Verify File.write was called with the custom path
+      expect(File).to have_received(:write) do |path, content|
+        expect(path).to eq('custom-output.json')
+        json_data = JSON.parse(content)
+        expect(json_data['metadata']['repository']).to eq('test/repo')
+        expect(json_data['issues'].length).to eq(2)
+      end
+    end
+    
+    it 'auto-enables dry mode when --json is used' do
+      # Mock File.write to avoid actually creating files during test
+      allow(File).to receive(:write)
+      allow(FileUtils).to receive(:mkdir_p)
+      
+      # Should show dry run output even without --dry when --json is used
+      expect {
+        cli = Issuer::CLI.new
+        cli.invoke(:main, [sample_file], {json: 'test.json'})
+      }.to output(/Dry run complete/).to_stdout
+    end
+    
+    it 'includes correct JSON structure in --json output' do
+      json_content = nil
+      
+      # Capture the JSON content that would be written
+      allow(File).to receive(:write) do |path, content|
+        json_content = content
+      end
+      allow(FileUtils).to receive(:mkdir_p)
+      
+      cli = Issuer::CLI.new
+      cli.invoke(:main, [sample_file], {json: 'test.json'})
+      
+      # Parse and verify the JSON structure
+      json_data = JSON.parse(json_content)
+      
+      # Check metadata structure
+      expect(json_data['metadata']).to include(
+        'generated_at',
+        'repository',
+        'total_issues',
+        'issuer_version'
+      )
+      expect(json_data['metadata']['repository']).to eq('test/repo')
+      expect(json_data['metadata']['total_issues']).to eq(2)
+      
+      # Check issues structure
+      expect(json_data['issues']).to be_an(Array)
+      expect(json_data['issues'].length).to eq(2)
+      
+      # Verify first issue has expected API payload structure
+      first_issue = json_data['issues'].first
+      expect(first_issue).to include('title', 'body', 'labels', 'assignee', 'milestone')
+      expect(first_issue['title']).to eq('Test issue 1')
+    end
+
   end
 
   describe 'version and help' do
