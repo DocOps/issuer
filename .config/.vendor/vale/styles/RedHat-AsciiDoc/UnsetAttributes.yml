@@ -1,8 +1,0 @@
----
-extends: existence
-scope: raw
-level: error
-link: https://docs.asciidoctor.org/asciidoc/latest/attributes/attribute-entries/
-message: "Unset attribute '%s' found."
-raw:
-  - '(?<!\{)\{[a-zA-Z0-9][a-zA-Z0-9_-]*!\}'

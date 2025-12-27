@@ -106,3 +106,4 @@ docs/releasehx/*.adoc
 releasehx-install.sh
 # DocOps Lab vendor files
 scripts/.vendor/
+.config/.vendor/
