@@ -1,0 +1,8 @@
+---
+extends: script
+scope: raw
+level: warning
+message: "Each sentence should be on its own line for better version control diffs and readability."
+link: https://docs.asciidoctor.org/asciidoc/latest/writing/style/#one-sentence-per-line
+description: "Encourages writing one sentence per line to improve readability and version control diffs."
+script: OneSentencePerLine.tengo

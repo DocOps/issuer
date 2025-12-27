@@ -1,0 +1,20 @@
+---
+extends: substitution
+scope: text
+level: suggestion 
+message: "Consider using monospace formatting for '%s'."
+link: https://docs.asciidoctor.org/asciidoc/latest/text/monospace/
+# Technical terms that should typically be in monospace
+swap:
+  '(?i)\bREADME\b': '`README.adoc`'
+  '(?i)\bGemfile\b': '`Gemfile`'
+  '(?i)\bRakefile\b': '`Rakefile`'
+  '(?i)\bDockerfile\b': '`Dockerfile`'
+  '(?i)\b\.env\b': '`.env`'
+  '(?i)\b\.gitignore\b': '`.gitignore`'
+  '(?i)\b\.yml\b': '`.yml`'
+  '(?i)\b\.yaml\b': '`.yaml`'
+  '(?i)\b\.json\b': '`.json`'
+  '(?i)\b\.rb\b': '`.rb`'
+  '(?i)\b\.md\b': '`.md`'
+  '(?i)\b\.adoc\b': '`.adoc`'

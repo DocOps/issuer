@@ -1,0 +1,8 @@
+---
+extends: existence
+scope: raw
+level: error
+message: "Use '[source,lang]' with '----' delimiters instead of markdown-style code blocks with '```'."
+link: https://docs.asciidoctor.org/asciidoc/latest/verbatim/source-blocks/
+raw:
+  - '```\w*\n[\s\S]*?\n```'

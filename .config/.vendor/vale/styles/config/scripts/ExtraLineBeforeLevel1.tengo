@@ -1,0 +1,121 @@
+text := import("text")
+
+matches := []
+lines := text.split(scope, "\n")
+
+// byte starts (CRLF-safe)
+starts := []
+run := 0
+i := 0
+for i < len(lines) {
+    starts = append(starts, run)
+    run = run + len(lines[i]) + 1
+    i = i + 1
+}
+
+commentRe := `^\s*//`
+condRe    := `^\s*(ifdef|ifndef|ifeval)::`
+idRe      := `^\[\[[A-Za-z0-9_-]+\]\]$`
+h1Re      := `^==\s+.+$`
+
+j := 0
+for j < len(lines) {
+    line := lines[j]
+
+    // Check if this is a level-1 heading
+    if text.re_match(h1Re, line) {
+        // Step 1: Walk backward from heading to find ID (required)
+        k := j - 1
+        idLineNum := -1
+        
+        // Skip backwards over comments/conditionals between ID and heading
+        for k >= 0 {
+            candidate := text.trim_space(lines[k])
+            
+            // Skip comments and conditionals
+            if text.re_match(commentRe, candidate) || text.re_match(condRe, candidate) {
+                k = k - 1
+                continue
+            }
+            
+            // If blank, no ID found
+            if candidate == "" {
+                break
+            }
+            
+            // Check if this is the ID
+            if text.re_match(idRe, candidate) {
+                idLineNum = k
+            }
+            
+            // Stop at first non-comment/conditional line
+            break
+        }
+        
+        // If no ID was found, flag this heading
+        if idLineNum == -1 {
+            begin := starts[j]
+            end   := begin + len(line)
+            matches = append(matches, {"begin": begin, "end": end})
+            j = j + 1
+            continue
+        }
+        
+        // Step 2: Walk backward from ID to find start of section header block
+        // Section header includes: opening conditionals/comments that are adjacent to ID (no blanks between)
+        m := idLineNum - 1
+        sectionStart := idLineNum
+        
+        for m >= 0 {
+            candidate := text.trim_space(lines[m])
+            
+            // If blank, stop - section header block ends here
+            if candidate == "" {
+                break
+            }
+            
+            // If comment or conditional, it's part of section header block
+            if text.re_match(commentRe, candidate) || text.re_match(condRe, candidate) {
+                sectionStart = m
+                m = m - 1
+                continue
+            }
+            
+            // Hit other content, stop
+            break
+        }
+        
+        // Step 3: Count blank lines immediately before section header block start
+        n := sectionStart - 1
+        blanks := 0
+        
+        for n >= 0 {
+            candidate := text.trim_space(lines[n])
+            
+            // Count consecutive blank lines
+            if candidate == "" {
+                blanks = blanks + 1
+                n = n - 1
+                continue
+            }
+            
+            // Hit non-blank, stop counting
+            break
+        }
+        
+        // If we reached the start of file without hitting content, don't require blanks
+        if n < 0 {
+            j = j + 1
+            continue
+        }
+        
+        // Require exactly 2 blank lines before the section header block
+        if blanks != 2 {
+            begin := starts[j]
+            end   := begin + len(line)
+            matches = append(matches, {"begin": begin, "end": end})
+        }
+    }
+
+    j = j + 1
+}

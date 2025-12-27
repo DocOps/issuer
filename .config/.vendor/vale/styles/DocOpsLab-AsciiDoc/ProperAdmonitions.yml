@@ -1,0 +1,8 @@
+---
+extends: existence
+scope: raw
+level: error
+message: "Use proper AsciiDoc admonition blocks instead of manual formatting."
+link: https://docs.asciidoctor.org/asciidoc/latest/blocks/admonitions/
+raw:
+  - '^\*\*NOTE:\*\*|^\*\*TIP:\*\*|^\*\*IMPORTANT:\*\*|^\*\*CAUTION:\*\*|^\*\*WARNING:\*\*'

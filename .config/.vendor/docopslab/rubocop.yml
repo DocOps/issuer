@@ -1,0 +1,130 @@
+# RuboCop configuration for DocOps Lab projects
+# This is the baseline configuration distributed via docopslab-dev
+
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  
+Style/MethodDefParentheses:
+  EnforcedStyle: require_no_parentheses
+
+Style/MethodCallWithArgsParentheses:
+  EnforcedStyle: require_parentheses
+  AllowParenthesesInMultilineCall: true
+  AllowParenthesesInChaining: true
+
+# Allow longer lines for documentation
+Layout/LineLength:
+  Max: 120
+  AllowedPatterns:
+    - '\A\s*#.*\z'   # Comments
+    - '\A\s*\*.*\z'  # Rdoc comments
+
+Metrics/MethodLength:
+  Max: 25
+
+# Allow longer blocks for Rake tasks and RSpec
+Metrics/BlockLength:
+  AllowedMethods:
+    - describe
+    - context
+    - feature
+    - scenario
+    - let
+    - let!
+    - subject
+    - task
+    - namespace
+  Max: 50
+
+# Documentation not required for internal tooling
+Style/Documentation:
+  Enabled: false
+
+# Allow TODO comments
+Style/CommentAnnotation:
+  Keywords:
+    - TODO
+    - FIXME
+    - OPTIMIZE
+    - HACK
+    - REVIEW
+
+Style/CommentedKeyword:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: single_quotes
+
+Style/StringLiteralsInInterpolation:
+  Enabled: true
+  EnforcedStyle: single_quotes
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+Layout/FirstParameterIndentation:
+  EnforcedStyle: consistent
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/MultilineMethodCallBraceLayout:
+  EnforcedStyle: same_line
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: aligned
+
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+Layout/TrailingWhitespace:
+  Enabled: true
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: true
+
+Layout/HashAlignment:
+  Enabled: false
+
+Layout/SpaceAroundOperators:
+  Enabled: false
+
+Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: false
+  EnforcedStyle: no_space
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Lint/UnusedMethodArgument:
+  Enabled: true
+
+Lint/UselessAssignment:
+  Enabled: true
+
+Lint/IneffectiveAccessModifier:
+  Enabled: true
+
+Security/YAMLLoad:
+  Enabled: false # Projects may intentionally use unsafe YAML loading
+
+Security/Eval:
+  Enabled: true # Catch and replace with safer alternatives
+
+# Disable Naming/PredicateMethod - we use generate_, run_, sync_, etc for actions
+Naming/PredicateMethod:
+  Enabled: false

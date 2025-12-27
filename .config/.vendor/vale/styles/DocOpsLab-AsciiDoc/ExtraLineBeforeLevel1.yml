@@ -1,0 +1,7 @@
+---
+extends: script
+scope: raw
+level: warning
+message: "Level-1 (==) headings must be preceded by two blank lines and an explicit [[section-id]] line."
+description: "Enforces: blank, blank, [[id]], then '== Heading'."
+script: ExtraLineBeforeLevel1.tengo

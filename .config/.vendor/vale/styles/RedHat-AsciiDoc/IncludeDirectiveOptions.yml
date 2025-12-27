@@ -1,0 +1,9 @@
+---
+# DocOps Lab AsciiDoc Style: Include Directive Usage  
+extends: existence
+scope: raw
+level: warning
+message: "Include directive should specify leveloffset or tag for better content organization."
+link: https://docs.asciidoctor.org/asciidoc/latest/directives/include/
+raw:
+  - 'include::[^[\n]*\[\]$'

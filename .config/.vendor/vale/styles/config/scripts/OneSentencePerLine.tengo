@@ -1,0 +1,53 @@
+text := import("text")
+
+matches := []
+
+lines := text.split(scope, "\n")
+
+starts := []
+run := 0
+i := 0
+for i < len(lines) {
+  line := lines[i]
+  starts = append(starts, run)
+  run = run + len(line) + 1
+  i = i + 1
+}
+
+// require an alnum/closer BEFORE .!? to avoid leading "." list markers
+boundary := `[A-Za-z0-9\)\]"'][.!?]['")\]]*[ \t]+[A-Z]`
+
+j := 0
+for j < len(lines) {
+  line := lines[j]
+
+  // skip attribute/table/heading lines
+  if text.re_match(`^[:|=]`, line) {
+    j = j + 1
+    continue
+  }
+
+  // skip numbered list items (e.g., "1. Something") unless prefaced by comment chars
+  // Allow: // 1. Something or # 1. Another thing
+  // Don't allow: 1. Something
+  if text.re_match(`^\d+\.\s+\w`, line) && !text.re_match(`^[/#]+\s*\d+\.\s+\w`, line) {
+    j = j + 1
+    continue
+  }
+
+  // skip ALL commented lines that start with number and period (like "# 1. Something")
+  if text.re_match(`^[/#]+\s*\d+\.\s`, line) {
+    j = j + 1
+    continue
+  }
+
+  if text.re_match(boundary, line) {
+    begin := starts[j]
+    end   := begin + len(line)
+    matches = append(matches, {"begin": begin, "end": end})
+  }
+
+  j = j + 1
+}
+
+// no explicit return

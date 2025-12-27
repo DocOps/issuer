@@ -1,0 +1,7 @@
+extends: existence
+message: "Use AsciiDoc definition list syntax (term:: definition) instead of bold/italic text followed by a colon."
+link: https://docs.asciidoctor.org/asciidoc/latest/lists/description/
+level: error
+scope: raw
+raw:
+  - (?m)^(\* )?\*\*?(.+)(:\*\*?|\*\*?:)[\s\n]+(.+)$

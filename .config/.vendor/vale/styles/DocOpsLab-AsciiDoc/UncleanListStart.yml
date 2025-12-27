@@ -1,0 +1,8 @@
+extends: existence
+message: |
+  Add a blank line before starting a list after a sentence ending in a colon.
+level: warning
+scope: raw
+raw:
+  - '(?m)^.*(?<!:):[ \t]*$(?=\n[\*\.]\s)'
+link: "Tip: run sed -E '/^[^:]+:[^:]*$/ { N; s/:\n([*.])/:\\n\\1/ }' -i yourfile.adoc"

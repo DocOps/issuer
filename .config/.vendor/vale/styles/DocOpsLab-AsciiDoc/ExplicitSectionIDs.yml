@@ -1,0 +1,8 @@
+---
+extends: script
+scope: raw
+level: warning
+message: "Section heading must be preceded by an explicit ID in format [[section-id]] on the line above."
+link: https://docs.asciidoctor.org/asciidoc/latest/sections/custom-ids/
+description: "Ensures all section headings have explicit IDs for better cross-referencing and stable links."
+script: ExplicitSectionIDs.tengo

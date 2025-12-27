@@ -1,0 +1,8 @@
+# style for replacing /\se\.g\.,?\s/ with `ex: `
+extends: substitution
+scope: text
+level: error
+message: "Use 'ex: ' instead of 'e.g., '."
+link: https://developers.google.com/style/word-list#e.g
+swap:
+  '([Ee])\.g\.,?\s': '\1x: '

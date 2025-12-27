@@ -2,11 +2,18 @@ require "bundler/gem_tasks"
 require "rspec/core/rake_task"
 require "yaml"
 
-RSpec::Core::RakeTask.new(:spec) do |t|
+# Load DocOps Lab development tasks
+begin
+  require 'docopslab/dev'
+rescue LoadError
+  # Skip if not available (e.g., production environment)
+end
+
+RSpec::Core::RakeTask.new(:rspec) do |t|
   t.pattern = 'specs/tests/rspec/**/*_spec.rb'
 end
 
-task :default => :spec
+task :default => :rspec
 
 desc "Setup Vale styles"
 task :vale_setup do
@@ -50,7 +57,7 @@ desc "Run all PR tests locally (same as GitHub Actions)"
 task :pr_test do
   puts "🔍 Running all PR tests locally..."
   puts "\n=== RSpec Tests ==="
-  Rake::Task[:spec].invoke
+  Rake::Task[:rspec].invoke
   
   puts "\n=== CLI Tests ==="
   Rake::Task[:cli_test].invoke

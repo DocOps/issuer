@@ -1,0 +1,9 @@
+---
+# DocOps Lab AsciiDoc Style: Xref Usage
+extends: existence
+scope: raw
+level: suggestion
+message: "Consider using 'xref:' for internal cross-references instead of 'link:' for better maintainability."
+link: https://docs.asciidoctor.org/asciidoc/latest/macros/xref/
+raw:
+  - 'link:(?![http|https|mailto|ftp]).*\.adoc'

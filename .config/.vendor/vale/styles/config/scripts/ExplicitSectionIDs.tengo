@@ -1,0 +1,56 @@
+text := import("text")
+
+matches := []
+lines := text.split(scope, "\n")
+
+// byte starts (CRLF-safe)
+starts := []
+run := 0
+i := 0
+for i < len(lines) {
+    starts = append(starts, run)
+    run = run + len(lines[i]) + 1
+    i = i + 1
+}
+
+idRe     := `^\[\[[A-Za-z0-9_-]+\]\]$`
+h2plusRe := `^={2,}\s+.+$`
+commentRe := `^\s*//`
+condRe    := `^\s*(ifdef|ifndef|ifeval)::`
+
+j := 0
+for j < len(lines) {
+    line := lines[j]
+    
+    // Check if this is a section heading (level 2+)
+    if text.re_match(h2plusRe, line) {
+        // Walk backward from j-1 to find the ID, skipping comments/conditionals
+        hasID := false
+        k := j - 1
+        
+        for k >= 0 {
+            candidate := text.trim_space(lines[k])
+            
+            // Skip empty lines, comments, and conditionals
+            if candidate == "" || text.re_match(commentRe, candidate) || text.re_match(condRe, candidate) {
+                k = k - 1
+                continue
+            }
+            
+            // Check if this line is an ID
+            if text.re_match(idRe, candidate) {
+                hasID = true
+            }
+            
+            // Stop at first non-skippable line
+            break
+        }
+        
+        if !hasID {
+            begin := starts[j]
+            end   := begin + len(line)
+            matches = append(matches, {"begin": begin, "end": end})
+        }
+    }
+    j = j + 1
+}

@@ -1,0 +1,13 @@
+# actionlint configuration for DocOps Lab projects
+# This file is synced from docopslab-dev gem
+
+# Disable overly strict rules for common patterns
+ignore:
+  # Allow commonly used but deprecated actions (we'll upgrade gradually)  
+  - 'SC2086:'  # shellcheck rule about double quotes
+  - 'the runner of "ubuntu-latest" is deprecated'
+  
+# Custom shell for shellcheck integration
+shellcheck:
+  enable: true
+  shell-options: "-e SC2086"  # Allow some globbing patterns
