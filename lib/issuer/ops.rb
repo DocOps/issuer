@@ -14,7 +14,7 @@ module Issuer
     # This method converts scalar strings to proper issue hashes and creates Issue objects
     # with enhanced defaults processing. It handles both string and hash inputs gracefully.
     #
-    # @param issues_data [Array<String, Hash>] Raw issue data - can be strings or hashes
+    # @param issues_data [Array<String, Hash>] Raw issue data; can be strings or hashes
     # @param defaults [Hash] Default values to apply to all issues
     # @return [Array<Issuer::Issue>] Array of processed Issue objects
     #

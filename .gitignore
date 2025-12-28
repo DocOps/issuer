@@ -61,7 +61,7 @@ comprehensive-test.yml
 .ruby-gemset
 
 # Bundler
-/Gemfile.lock.example
+./Gemfile.lock
 /.bundle
 
 # Documentation
@@ -104,3 +104,6 @@ specs/data/*-issues.yml
 docs/releasehx/*.md
 docs/releasehx/*.adoc
 releasehx-install.sh
+# DocOps Lab vendor files
+scripts/.vendor/
+.config/.vendor/

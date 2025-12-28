@@ -78,7 +78,7 @@ module Issuer
       @type = @raw_data['type'] || defaults['type']
       @stub = @raw_data.key?('stub') ? @raw_data['stub'] : defaults['stub']
       
-      # For tags, we need special handling - combine defaults and issue tags for later processing
+      # For tags, we need special handling; combine defaults and issue tags for later processing
       defaults_tags = Array(defaults['tags'])
       issue_tags = Array(@raw_data['tags'])
       @tags = defaults_tags + issue_tags
@@ -401,7 +401,7 @@ module Issuer
       # Get terminal width, default to 80 if not available
       terminal_width = ENV['COLUMNS']&.to_i || 80
       
-      # Calculate available width for content (terminal width - indentation)
+      # Calculate available width for content (terminal width; indentation)
       available_width = terminal_width - indent_size
       
       # If line fits within available width, just return it with indentation

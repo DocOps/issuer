@@ -1,0 +1,8 @@
+# DocOps Lab RuboCop Configuration
+# This file inherits from the base configuration and can be customized for your project
+
+inherit_from: .vendor/docopslab/rubocop.yml
+
+# Add your project-specific overrides below:
+# Style/StringLiterals:
+#   EnforcedStyle: double_quotes
