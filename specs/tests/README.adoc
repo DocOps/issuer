@@ -27,10 +27,10 @@ The issuer CLI automatically logs all created artifacts (issues, milestones, lab
 
 When you run issuer with live operations (not `--dry`):
 
-1. *Run Tracking*: A unique run ID is generated (example: `run_20250711_143022_abcd`)
-2. *Artifact Logging*: All created issues, milestones, and labels are logged with metadata
-3. *Status Tracking*: Run status is tracked (`in_progress`, `completed`, `failed`)
-4. *JSON Storage*: All data is stored in JSON format in `~/.config/issuer/logs/<RUN_ID>.json`
+. *Run Tracking*: A unique run ID is generated (example: `run_20250711_143022_abcd`)
+. *Artifact Logging*: All created issues, milestones, and labels are logged with metadata
+. *Status Tracking*: Run status is tracked (`in_progress`, `completed`, `failed`)
+. *JSON Storage*: All data is stored in JSON format in `~/.config/issuer/logs/<RUN_ID>.json`
 
 === Log Structure
 
@@ -69,9 +69,10 @@ Each run log contains:
 
 During test runs, artifacts are automatically logged. This enables:
 
-* *Verification*: Confirm that all expected artifacts were created
-* *Debugging*: Track what was created when tests fail
-* *Cleanup Planning*: Prepare for future cleanup script development
+Verification:: Confirm that all expected artifacts were created
+Debugging:: Track what was created when tests fail
+Cleanup Planning::
+Prepare for future cleanup script development
 
 The test cleanup scripts can read these logs to understand what needs to be cleaned up.
 
@@ -158,22 +159,36 @@ Or run with options:
 
 === Core Functionality Tests
 
-* *`01-auth-connection.yml`*: Basic authentication and API connectivity
-* *`02-basic-issues.yml`*: Simple issue creation, markdown support, special characters
-* *`03-milestone-tests.yml`*: Milestone creation and assignment
-* *`04-label-tests.yml`*: Label creation, default/append logic
-* *`05-assignment-tests.yml`*: User assignment functionality
+`01-auth-connection.yml`::
+Basic authentication and API connectivity
+
+`02-basic-issues.yml`::
+Simple issue creation, markdown support, special characters
+
+`03-milestone-tests.yml`::
+Milestone creation and assignment
+
+`04-label-tests.yml`::
+Label creation, default/append logic
+
+`05-assignment-tests.yml`::
+User assignment functionality
 
 === Advanced Tests
 
-* *`06-automation-tests.yml`*: Automation flags (`--auto-metadata`, `--auto-versions`, etc.)
-* *`07-error-tests.yml`*: Error handling scenarios (invalid repo, etc.)
-* *`08-complex-tests.yml`*: Complex integration scenarios with multiple features
+`06-automation-tests.yml`::
+Automation flags (`--auto-metadata`, `--auto-versions`, etc.)
+
+`07-error-tests.yml`::
+Error handling scenarios (invalid repo, etc.)
+
+`08-complex-tests.yml`::
+Complex integration scenarios with multiple features
 
 === Configuration
 
-* *`config.yml.example`*: Template configuration file
-* *`config.yml`*: Your customized configuration (create from example)
+`config.yml.example`:: Template configuration file
+`config.yml`:: Your customized configuration (create from example)
 
 == Test Runner Features
 
@@ -194,12 +209,12 @@ Options:
 
 === Test Categories
 
-1. *Dry-run tests*: Validate IMYML parsing without API calls
-2. *Basic functionality*: Core issue creation features
-3. *Advanced features*: Milestones, labels, assignments
-4. *Automation*: Testing `--auto-*` flags
-5. *Error scenarios*: Invalid inputs and error handling
-6. *Edge cases*: Unicode, large content, special characters
+. *Dry-run tests:* Validate IMYML parsing without API calls
+. *Basic functionality:* Core issue creation features
+. *Advanced features:* Milestones, labels, assignments
+. *Automation:* Testing `--auto-*` flags
+. *Error scenarios:* Invalid inputs and error handling
+. *Edge cases:* Unicode, large content, special characters
 
 == Results and Logging
 
@@ -219,12 +234,13 @@ specs/tests/results/
 
 Tests are considered successful when:
 
-* ✅ All issues are created without errors
-* ✅ Milestones are created when needed
-* ✅ Labels are created when needed  
-* ✅ Assignments work correctly
-* ✅ Automation flags work as expected
-* ✅ Error scenarios fail gracefully
+[%interactive]
+- [ ] All issues are created without errors
+- [ ] Milestones are created when needed
+- [ ] Labels are created when needed  
+- [ ] Assignments work correctly
+- [ ] Automation flags work as expected
+- [ ] Error scenarios fail gracefully
 
 == Cleanup
 
@@ -279,7 +295,7 @@ Run full test suite before releases:
 
 === Common Issues
 
-1. *Authentication Errors*
+. *Authentication Errors*
 +
 ----
 GitHub token not found in environment variables
@@ -287,7 +303,7 @@ GitHub token not found in environment variables
 +
 Solution: Set `GITHUB_TOKEN` or other token environment variables
 
-2. *Repository Access Errors*
+. *Repository Access Errors*
 +
 ----
 Not Found (HTTP 404)
@@ -295,7 +311,7 @@ Not Found (HTTP 404)
 +
 Solution: Verify repository name and token permissions
 
-3. *Rate Limiting*
+. *Rate Limiting*
 +
 ----
 API rate limit exceeded
@@ -303,7 +319,7 @@ API rate limit exceeded
 +
 Solution: Wait or use a token with higher rate limits
 
-4. *Permission Errors*
+. *Permission Errors*
 +
 ----
 Resource not accessible by integration
@@ -338,11 +354,11 @@ issuer specs/tests/github-api/01-auth-connection.yml
 
 === Adding New Tests
 
-1. Create a new `.yml` file in `specs/tests/github-api/`
-2. Follow the naming convention: `NN-description.yml`
-3. Use `[TEST]` prefix in issue summaries
-4. Update the test runner script to include the new test
-5. Document expected behavior in issue bodies
+. Create a new `.yml` file in `specs/tests/github-api/`
+. Follow the naming convention: `NN-description.yml`
+. Use `[TEST]` prefix in issue summaries
+. Update the test runner script to include the new test
+. Document expected behavior in issue bodies
 
 === Test File Template
 
@@ -422,30 +438,30 @@ echo "Running GitHub API integration tests..."
 
 == Security Considerations
 
-1. *Token Security*: Never commit GitHub tokens to version control
-2. *Test Repository*: Use a dedicated test repository, not production repos  
-3. *Cleanup*: Always clean up test artifacts to avoid clutter
-4. *Rate Limits*: Be mindful of GitHub API rate limits during testing
-5. *Permissions*: Use tokens with minimal required permissions
+. *Token Security*: Never commit GitHub tokens to version control
+. *Test Repository*: Use a dedicated test repository, not production repos  
+. *Cleanup*: Always clean up test artifacts to avoid clutter
+. *Rate Limits*: Be mindful of GitHub API rate limits during testing
+. *Permissions*: Use tokens with minimal required permissions
 
 == Contributing
 
 When contributing to the test suite:
 
-1. *Add tests for new features*: Every new feature should have corresponding tests
-2. *Update existing tests*: Modify tests when changing functionality
-3. *Test edge cases*: Include tests for error conditions and edge cases
-4. *Document expectations*: Clearly document what each test validates
-5. *Clean up*: Ensure tests can be cleaned up properly
+. *Add tests for new features*: Every new feature should have corresponding tests
+. *Update existing tests*: Modify tests when changing functionality
+. *Test edge cases*: Include tests for error conditions and edge cases
+. *Document expectations*: Clearly document what each test validates
+. *Clean up*: Ensure tests can be cleaned up properly
 
 == Support
 
 For issues with the testing suite:
 
-1. Check the troubleshooting section above
-2. Review test logs in `specs/tests/results/`
-3. Run individual tests manually for debugging
-4. Open an issue in the main repository with:
-   * Test configuration used
-   * Error messages
-   * Expected vs actual behavior
+. Check the troubleshooting section above
+. Review test logs in `specs/tests/results/`
+. Run individual tests manually for debugging
+. Open an issue in the main repository with:
+* Test configuration used
+* Error messages
+* Expected vs actual behavior

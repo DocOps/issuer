@@ -337,8 +337,8 @@ Whether to treat the issue as a stub entry, meaning prepend any `$meta.defaults.
 
 A source IMYML file is required and can be specified in two ways:
 
-* *Positional argument* (most common): Place the file path immediately after `issuer`
-* *Named option*: Use the `--file` option flag to specify the file path
+* *Positional argument* (most common). Place the file path immediately after `issuer`
+* *Named option.* Use the `--file` option flag to specify the file path
 
 Examples:
 
@@ -436,9 +436,10 @@ Issuer automatically logs all API operations for tracking and potential cleanup.
 
 By default, logs are stored in a user-wide directory:
 
-* *Linux/macOS*: `~/.config/issuer/logs/`
-* *With XDG Base Directory*: `$XDG_CONFIG_HOME/issuer/logs/`
-* *Custom location*: Set `ISSUER_CONFIG_DIR` environment variable
+[horizontal]
+Linux/macOS:: `~/.config/issuer/logs/`
+With XDG Base Directory:: `$XDG_CONFIG_HOME/issuer/logs/`
+Custom location:: Set `ISSUER_CONFIG_DIR` environment variable
 
 Example:
 [source,bash]
@@ -550,10 +551,10 @@ bundle exec rspec --pattern "*ops*"
 
 The `pr_test` task runs the exact same tests that GitHub Actions runs for pull requests:
 
-* *RSpec Tests*: All unit tests (`bundle exec rake spec`)
-* *CLI Tests*: Command-line interface functionality tests
-* *YAML Validation*: Validates all example YAML files
-* *Documentation Quality*: Vale linting on all documentation files
+RSpec Tests:: All unit tests (`bundle exec rake spec`)
+CLI Tests:: Command-line interface functionality tests
+YAML Validation:: Validates all example YAML files
+Documentation Quality:: Vale linting on all documentation files
 
 This ensures you can validate your changes locally before pushing to GitHub.
 
