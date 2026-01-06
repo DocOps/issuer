@@ -18,7 +18,7 @@ module Issuer
     class_option :tags, type: :string, desc: 'Comma-separated default or appended (+) labels for all issues'
     class_option :stub, type: :boolean, desc: 'Enable stub mode for all issues'
     class_option :dry, type: :boolean, default: false, aliases: ['--dry-run'], desc: 'Print issues, don\'t post'
-    class_option :json, type: :string, lazy_default: '', desc: 'Save API payloads as JSON to PATH (defaults to _payloads/, auto-enables --dry)'
+    class_option :json, type: :string, lazy_default: '', desc: 'Save API payloads as JSON to PATH (defaults to _payloads/). Combine with --dry to skip posting.'
     class_option :tokenv, type: :string, desc: 'Name of environment variable containing GitHub token'
 
     # Resource automation options
@@ -97,8 +97,9 @@ module Issuer
       defaults['stub'] = options[:stub] if !options[:stub].nil?
 
       # Determine target repository
+      dry_mode = options[:dry]
       repo = options[:proj] || meta['proj'] || ENV['ISSUER_REPO'] || ENV['ISSUER_PROJ']
-      if repo.nil? && !options[:dry]
+      if repo.nil? && !dry_mode
         abort 'No target repo set. Use --proj, $meta.proj, or ENV[ISSUER_REPO].'
       end
 
@@ -111,9 +112,8 @@ module Issuer
       # Apply stub logic with head/tail/body composition
       issues = Issuer::Ops.apply_stub_logic(issues, defaults)
 
-      # Auto-enable dry mode when --json is used
-      json_mode = !options[:json].nil?
-      dry_mode = options[:dry] || json_mode
+      json_requested = !options[:json].nil?
+      json_path = options[:json]
 
       # Separate valid and invalid issues
       valid_issues = issues.select(&:valid?)
@@ -124,12 +124,11 @@ module Issuer
         puts "Skipping issue ##{find_original_index(issues, issue) + 1}: #{issue.validation_errors.join(', ')}"
       end
 
+      site = nil
+
       if dry_mode
-        if json_mode
-          perform_json_output(valid_issues, repo, options[:json])
-        else
-          perform_dry_run(valid_issues, repo)
-        end
+        site = build_dry_run_site
+        perform_dry_run(valid_issues, repo, site)
       else
         # Use Sites architecture for validation and posting
         site_options = {}
@@ -159,6 +158,8 @@ module Issuer
           raise
         end
       end
+
+      perform_json_output(valid_issues, repo, json_path, site, dry_run: dry_mode) if json_requested
 
       print_summary(valid_issues.length, invalid_issues.length, dry_mode)
     end
@@ -214,12 +215,7 @@ module Issuer
       issues_array.find_index(target_issue) || 0
     end
 
-    def perform_dry_run issues, repo
-      # Create site instance for parameter conversion in dry-run mode
-      site_options = { token: 'dry-run-token' }
-      site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
-      site = Issuer::Sites::Factory.create('github', **site_options)
-
+    def perform_dry_run issues, repo, site
       issues.each do |issue|
         print_issue_summary(issue, repo, site)
       end
@@ -231,7 +227,7 @@ module Issuer
       end
     end
 
-    def perform_json_output issues, repo, json_path
+    def perform_json_output issues, repo, json_path, site, dry_run:
       require 'json'
       require 'fileutils'
 
@@ -246,14 +242,9 @@ module Issuer
 
       FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
 
-      # Create site instance for parameter conversion
-      site_options = { token: 'dry-run-token' }
-      site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
-      site = Issuer::Sites::Factory.create('github', **site_options)
-
       # Convert issues to API payloads
       payloads = issues.map do |issue|
-        site.convert_issue_to_site_params(issue, repo, dry_run: true)
+        site.convert_issue_to_site_params(issue, repo, dry_run: dry_run)
       end
 
       # Create JSON structure
@@ -286,6 +277,12 @@ module Issuer
         project_term = site.field_mappings[:project_name] || 'project'
         puts "JSON contains #{issues.length} issue payloads for #{project_term}: #{repo}"
       end
+    end
+
+    def build_dry_run_site
+      site_options = { token: 'dry-run-token' }
+      site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
+      Issuer::Sites::Factory.create('github', **site_options)
     end
 
     def print_summary valid_count, invalid_count, dry_run
