@@ -17,6 +17,7 @@ conversions:
   summ: issue_heading
   head: issue_heading
   note: issue_body
+  note_source: issue_body
   note_pattern: '/^## Release Note\s*\n+(?<note>(.|\n)+)/mi'
   markup: asciidoc
   engine: asciidoctor
