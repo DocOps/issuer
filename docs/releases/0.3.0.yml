@@ -8,13 +8,13 @@ changes:
     part: cli
     summ: Added a `--json [PATH]` option for writing locally instead of to remote API
     note: |
-      The `--json` flag stores the prepared REST API issue payloads as a single JSON file in the exact form used for the API. The JSON file saves to PATH, which defaults to `_payloads/` locally.
-
-      Use `--dry` when you want to skip posting and only export the payloads.
-
-      == Release Note
-
-      Added a CLI option to save GitHub API issue payloads as JSON files locally, enabling payload inspection and workflow automation.
+      The `--json` flag will simply store the prepared REST API issue/item objects as a single JSON file instead of pushing them to remote API. The JSON file will be in the exact form prepared for the remote API, and it will save to PATH, which defaults to `_payloads/` locally.
+      
+      Any use of `--json` automatically invokes the `:dry` option to ensure we do not POST to APIs.
+      
+      ## Release Note
+      
+      Added  CLI option to save GitHub API issue payloads as JSON files locally instead of posting to GitHub, enabling payload inspection and workflow automation.
     lead: briandominick
 
   - chid: 0_3_0-34
