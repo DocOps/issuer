@@ -1,0 +1,25 @@
+code: "0.3.0"
+date: 2026-01-23
+memo:
+changes:
+
+  - chid: 0_3_0-35
+    tick: 35
+    part: cli
+    summ: Added a `--json [PATH]` option for writing locally instead of to remote API
+    note: |
+      The `--json` flag will simply store the prepared REST API issue/item objects as a single JSON file instead of pushing them to remote API. The JSON file will be in the exact form prepared for the remote API, and it will save to PATH, which defaults to `_payloads/` locally.
+      
+      Any use of `--json` automatically invokes the `:dry` option to ensure we do not POST to APIs.
+      
+      ## Release Note
+      
+      Added  CLI option to save GitHub API issue payloads as JSON files locally instead of posting to GitHub, enabling payload inspection and workflow automation.
+    lead: briandominick
+
+  - chid: 0_3_0-34
+    tick: 34
+    part: cli
+    summ: Made `issuer help` commandline return help screen instead of error
+    note: |
+      Running the command with `help` as the first/only argument returns `Error: File not found: help` when it should return the help/usage screen.

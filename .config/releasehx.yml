@@ -1,0 +1,152 @@
+# ReleaseHx configuration for DocOps/issuer repository
+
+origin:
+  source: github
+  project: DocOps/issuer
+  version: 3
+  label: GitHub Issues API v3
+  format: json
+
+paths:
+  drafts_dir: docs/releases
+  payloads_dir: docs/releases/payloads
+  templates_dir: docs/releases/templates
+  mappings_dir: docs/releases/mappings
+
+conversions:
+  summ: issue_heading
+  head: issue_heading
+  note: issue_body
+  note_pattern: '/^## Release Note\s*\n+(?<note>(.|\n)+)/mi'
+  markup: asciidoc
+  engine: asciidoctor
+
+rhyml:
+  pasterize_summ: true
+  pasterize_head: true
+  chid: "{{ release.code | replace: '.', '_' | upcase }}-{{ change.tick }}"
+  empty_notes: skip
+
+parts:
+  label_prefix: "part:"
+  cli:
+    text: CLI
+    head: CLI
+    icon: terminal
+  imyml:
+    text: IMYML
+    head: IMYML
+    icon: file-code-o
+  documentation:
+    text: documentation
+    head: Documentation
+    icon: book
+  api_clients:
+    text: API Clients
+    head: API Clients
+    icon: plug
+
+types:
+  label_prefix: "type:"
+  removal:
+    slug: removal
+    text: removal
+    head: Removed
+    icon: exclamation-triangle
+  feature:
+    slug: feature
+    text: new feature
+    head: Added
+    icon: plus-square-o
+  bug:
+    slug: bug
+    text: bug fix
+    head: Fixed
+    icon: bug
+  improvement:
+    slug: improvement
+    text: improvement
+    head: Improved
+    icon: wrench
+  deprecation:
+    slug: deprecation
+    text: deprecation
+    head: Deprecated
+    icon: exclamation-circle
+
+tags:
+  _include: ['needs:note', 'changelog', 'breaking', 'deprecation']
+  _exclude: ['internal', 'wontfix', 'duplicate']
+  
+  needs:note:
+    head: Release Notes Needed
+    icon: pencil
+    text: Requires release note
+    drop: true
+  
+  breaking:
+    head: Breaking Changes
+    icon: exclamation-triangle
+    text: Breaking changes
+  
+  deprecation:
+    head: Deprecations
+    icon: clock-o
+    text: Deprecated features
+
+links:
+  web: https://github.com/DocOps/issuer/issues/{{ tick }}
+  git: https://github.com/DocOps/issuer/commit/{{ hash }}
+  usr: https://github.com/{{ vars.lead }}
+
+modes:
+  asciidoc_frontmatter: true
+  markdown_frontmatter: false
+  remove_excess_lines: 2
+
+history:
+  items:
+    issue_links: true
+    git_links: false
+    metadata_icons: true
+
+# Enable dynamic labeling for the changelog section
+changelog:
+  head: What's Changed
+  text: Summary of all changes in this release.
+  htag: h2
+  spot: 2
+  sort:
+    - breaking:grouping1
+    - type:grouping1
+  items:
+    frame: unordered
+    allow_redundant: false
+    show_issue_links: true
+    metadata_labels: before
+    metadata_icons: before
+    show_parts_label: true
+    show_tags_label: false
+    show_type_label: false
+    show_lead_label: false
+
+# Enable dynamic labeling for the release notes section
+notes:
+  head: Release Notes
+  text: Detailed descriptions of notable changes.
+  htag: h2
+  spot: 1
+  sort:
+    - breaking:grouping1
+    - deprecation:grouping1
+    - part:grouping1
+  items:
+    frame: unordered
+    allow_redundant: true
+    show_issue_links: true
+    metadata_labels: before
+    metadata_icons: before
+    show_parts_label: true
+    show_tags_label: true
+    show_type_label: true
+    show_lead_label: true

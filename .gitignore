@@ -101,8 +101,7 @@ specs/data/*-issues.yml
 .agent/
 
 # Docs and ReleaseHx files
-docs/releasehx/*.md
-docs/releasehx/*.adoc
+docs/releases/*.md
 releasehx-install.sh
 # DocOps Lab vendor files
 scripts/.vendor/

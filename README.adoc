@@ -621,21 +621,22 @@ This documentation is automatically updated with each gem release.
 === Release History Management
 
 As of version 0.2.0, Release Notes and Changelog are generated using the link:https://github.com/DocOps/releasehx[_ReleaseHx_] tool.
-You can find the release history assets in the `docs/releasehx/` directory, which contains a configuration file and RHYML files that are auto-generated and then manually edited to produce the GitHub link:https://github.com/DocOps/issuer/releases[release announcements].
+You can find the release history assets in the `docs/releases/` directory, while the ReleaseHx configuration lives at `.config/releasehx.yml`.
+The RHYML files are auto-generated and then manually edited to produce the GitHub link:https://github.com/DocOps/issuer/releases[release announcements].
 
 . Draft RHYML draft file from the online GitHub Issues for the given version:
 +
 [.prompt,subs=+attributes]
- bundle exec rhx {this_prod_vrsn} --yaml docs/releasehx/release-{this_prod_vrsn}.yml --config docs/releasehx/config.yml
+ bundle exec rhx {this_prod_vrsn} --yaml docs/releases/{this_prod_vrsn}.yml --config .config/releasehx.yml
 
 . Manually edit the RHYML draft file.
 
 . Generate the release history as Markdown.
 +
 [.prompt,subs=+attributes]
- bundle exec rhx docs/releasehx/release-{this_prod_vrsn}.yml --md docs/releasehx/{this_prod_vrsn}.md --config docs/releasehx/config.yml
+ bundle exec rhx docs/releases/{this_prod_vrsn}.yml --md docs/releases/{this_prod_vrsn}.md --config .config/releasehx.yml
 
-. Copy and paste the contents of `docs/releasehx/{this_prod_vrsn}.md` into the GitHub release form at https://github.com/DocOps/issuer/releases/new.
+. Copy and paste the contents of `docs/releases/{this_prod_vrsn}.md` into the GitHub release form at https://github.com/DocOps/issuer/releases/new.
 
 [[contributing]]
 === Contributing

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "spec_helper"
+require 'stringio'
 
 RSpec.describe Issuer::CLI do
   # Mock the GitHub site methods to avoid actual API calls during testing
@@ -218,7 +219,7 @@ RSpec.describe Issuer::CLI do
       
       expect {
         cli = Issuer::CLI.new
-        cli.invoke(:main, [sample_file], {json: ''})
+        cli.invoke(:main, [sample_file], {json: '', dry: true})
       }.to output(/Saved 2 issue payloads to: _payloads/).to_stdout
       
       # Verify File.write was called with JSON content
@@ -238,7 +239,7 @@ RSpec.describe Issuer::CLI do
       
       expect {
         cli = Issuer::CLI.new
-        cli.invoke(:main, [sample_file], {json: 'custom-output.json'})
+        cli.invoke(:main, [sample_file], {json: 'custom-output.json', dry: true})
       }.to output(/Saved 2 issue payloads to: custom-output.json/).to_stdout
       
       # Verify File.write was called with the custom path
@@ -250,16 +251,24 @@ RSpec.describe Issuer::CLI do
       end
     end
     
-    it 'auto-enables dry mode when --json is used' do
+    it 'does not auto-enable dry mode when --json is used' do
       # Mock File.write to avoid actually creating files during test
       allow(File).to receive(:write)
       allow(FileUtils).to receive(:mkdir_p)
-      
-      # Should show dry run output even without --dry when --json is used
-      expect {
+      allow(Issuer::Ops).to receive(:validate_and_prepare_resources)
+      allow_any_instance_of(Issuer::Sites::GitHub).to receive(:post_issues).and_return(0)
+
+      stdout = StringIO.new
+      $stdout = stdout
+      begin
         cli = Issuer::CLI.new
         cli.invoke(:main, [sample_file], {json: 'test.json'})
-      }.to output(/Dry run complete/).to_stdout
+      ensure
+        $stdout = STDOUT
+      end
+
+      expect(stdout.string).to include('✅ Completed')
+      expect(stdout.string).not_to include('Dry run complete')
     end
     
     it 'includes correct JSON structure in --json output' do
@@ -272,7 +281,7 @@ RSpec.describe Issuer::CLI do
       allow(FileUtils).to receive(:mkdir_p)
       
       cli = Issuer::CLI.new
-      cli.invoke(:main, [sample_file], {json: 'test.json'})
+      cli.invoke(:main, [sample_file], {json: 'test.json', dry: true})
       
       # Parse and verify the JSON structure
       json_data = JSON.parse(json_content)
