@@ -1,0 +1,104 @@
+# GitHub Issues API to RHYML mapping configuration (Label-based for Issuer)
+# Maps GitHub Issues API response to RHYML Change entries
+# Uses labels with prefixes for type and part extraction
+
+$config:
+  desc: "GitHub Issues API to RHYML mapping (label-based types/parts for Issuer)"
+  path_lang: jmespath
+  tplt_lang: liquid
+
+# GitHub Issues API returns an array of issues directly
+changes_array_path: "@"
+
+# Map each issue to RHYML Change properties
+tick:
+  path: "number"
+
+summ:
+  path: "title"
+
+note:
+  path: "body"
+
+# Extract type from labels with configured prefix (e.g., "type:bug" -> "bug")
+type:
+  path: "labels[].name"
+  ruby: |
+    labels = path.is_a?(Array) ? path : []
+    type_prefix = config.dig('types', 'label_prefix') || 'type:'
+    type_defs = config.dig('types') || {}
+    
+    # Find label that starts with type prefix
+    type_label = labels.find { |label| label.downcase.start_with?(type_prefix.downcase) }
+    return nil unless type_label
+    
+    # Strip prefix to get type slug
+    type_slug = type_label.sub(/^#{Regexp.escape(type_prefix)}/i, '').downcase
+    
+    # Match against configured type keys/slugs
+    type_defs.each do |type_key, type_config|
+      next unless type_config.is_a?(Hash)
+      configured_slug = type_config['slug']
+      return type_key if type_key.downcase == type_slug
+      return type_key if configured_slug && configured_slug.downcase == type_slug
+    end
+    
+    # If no match found, return the slug itself
+    type_slug
+
+# Extract parts from labels with configured prefix (e.g., "part:cli" -> ["cli"])
+parts:
+  path: "labels[].name"
+  ruby: |
+    labels = path.is_a?(Array) ? path : []
+    part_prefix = config.dig('parts', 'label_prefix') || 'part:'
+    part_defs = config.dig('parts') || {}
+    
+    # Find all labels that start with part prefix
+    part_labels = labels.select { |label| label.downcase.start_with?(part_prefix.downcase) }
+    
+    # Strip prefix and match against configured parts
+    found_parts = part_labels.map do |label|
+      part_slug = label.sub(/^#{Regexp.escape(part_prefix)}/i, '').downcase
+      
+      # Try to match against configured part keys/slugs
+      matched_part = nil
+      part_defs.each do |part_key, part_config|
+        next if part_key == 'label_prefix' # Skip the prefix config itself
+        next unless part_config.is_a?(Hash)
+        
+        configured_slug = part_config['slug']
+        if part_key.downcase == part_slug
+          matched_part = part_key
+          break
+        elsif configured_slug && configured_slug.downcase == part_slug
+          matched_part = part_key
+          break
+        end
+      end
+      
+      # Return matched part or the slug itself
+      matched_part || part_slug
+    end
+    
+    found_parts.compact.uniq
+
+# Extract tags from remaining labels (excluding type and part labels)
+tags:
+  path: "labels[].name"
+  ruby: |
+    labels = path.is_a?(Array) ? path : []
+    type_prefix = config.dig('types', 'label_prefix') || 'type:'
+    part_prefix = config.dig('parts', 'label_prefix') || 'part:'
+    
+    # Filter out type and part labels
+    tag_labels = labels.reject do |label|
+      l = label.downcase
+      l.start_with?(type_prefix.downcase) || l.start_with?(part_prefix.downcase)
+    end
+    
+    tag_labels.uniq
+
+# Extract lead/assignee information
+lead:
+  path: "assignee.login"
