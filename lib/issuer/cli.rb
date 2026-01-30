@@ -18,6 +18,7 @@ module Issuer
     class_option :tags, type: :string, desc: 'Comma-separated default or appended (+) labels for all issues'
     class_option :stub, type: :boolean, desc: 'Enable stub mode for all issues'
     class_option :dry, type: :boolean, default: false, aliases: ['--dry-run'], desc: 'Print issues, don\'t post'
+    class_option :json, type: :string, lazy_default: '', desc: 'Save API payloads as JSON to PATH (defaults to _payloads/). Combine with --dry to skip posting.'
     class_option :tokenv, type: :string, desc: 'Name of environment variable containing GitHub token'
 
     # Resource automation options
@@ -96,8 +97,9 @@ module Issuer
       defaults['stub'] = options[:stub] if !options[:stub].nil?
 
       # Determine target repository
+      dry_mode = options[:dry]
       repo = options[:proj] || meta['proj'] || ENV['ISSUER_REPO'] || ENV['ISSUER_PROJ']
-      if repo.nil? && !options[:dry]
+      if repo.nil? && !dry_mode
         abort 'No target repo set. Use --proj, $meta.proj, or ENV[ISSUER_REPO].'
       end
 
@@ -110,6 +112,9 @@ module Issuer
       # Apply stub logic with head/tail/body composition
       issues = Issuer::Ops.apply_stub_logic(issues, defaults)
 
+      json_requested = !options[:json].nil?
+      json_path = options[:json]
+
       # Separate valid and invalid issues
       valid_issues = issues.select(&:valid?)
       invalid_issues = issues.reject(&:valid?)
@@ -119,8 +124,11 @@ module Issuer
         puts "Skipping issue ##{find_original_index(issues, issue) + 1}: #{issue.validation_errors.join(', ')}"
       end
 
-      if options[:dry]
-        perform_dry_run(valid_issues, repo)
+      site = nil
+
+      if dry_mode
+        site = build_dry_run_site
+        perform_dry_run(valid_issues, repo, site)
       else
         # Use Sites architecture for validation and posting
         site_options = {}
@@ -151,7 +159,9 @@ module Issuer
         end
       end
 
-      print_summary(valid_issues.length, invalid_issues.length, options[:dry])
+      perform_json_output(valid_issues, repo, json_path, site, dry_run: dry_mode) if json_requested
+
+      print_summary(valid_issues.length, invalid_issues.length, dry_mode)
     end
 
     private
@@ -175,6 +185,7 @@ module Issuer
 
       Mode Options:
         --dry, --dry-run         #{self.class_options[:dry].description}
+        --json [PATH]            #{self.class_options[:json].description}
         --auto-versions          #{self.class_options[:auto_versions].description}
         --auto-milestones        (alias for --auto-versions)
         --auto-tags              #{self.class_options[:auto_tags].description}
@@ -190,6 +201,7 @@ module Issuer
         issuer issues.yml --proj myorg/myrepo
         issuer --file issues.yml --proj myorg/myrepo --dry
         issuer issues.yml --vrsn 1.1.2
+        issuer issues.yml --json dry-output.json
         issuer --version
         issuer --help
 
@@ -203,21 +215,74 @@ module Issuer
       issues_array.find_index(target_issue) || 0
     end
 
-    def perform_dry_run issues, repo
-      # Create site instance for parameter conversion in dry-run mode
-      site_options = { token: 'dry-run-token' }
-      site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
-      site = Issuer::Sites::Factory.create('github', **site_options)
-
+    def perform_dry_run issues, repo, site
       issues.each do |issue|
         print_issue_summary(issue, repo, site)
       end
-      
+
       # Add project summary at the end
       if repo
         project_term = site.field_mappings[:project_name] || 'project'
         puts "Would process #{issues.length} issues for #{project_term}: #{repo}"
       end
+    end
+
+    def perform_json_output issues, repo, json_path, site, dry_run:
+      require 'json'
+      require 'fileutils'
+
+      if json_path.empty?
+        output_dir = '_payloads'
+        timestamp = Time.now.strftime('%Y%m%d_%H%M%S')
+        output_path = File.join(output_dir, "issues_#{timestamp}.json")
+      else
+        output_path = json_path
+        output_dir = File.dirname(output_path)
+      end
+
+      FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
+
+      # Convert issues to API payloads
+      payloads = issues.map do |issue|
+        site.convert_issue_to_site_params(issue, repo, dry_run: dry_run)
+      end
+
+      # Create JSON structure
+      json_data = {
+        metadata: {
+          generated_at: Time.now.iso8601,
+          repository: repo,
+          total_issues: issues.length,
+          issuer_version: Issuer::VERSION
+        },
+        issues: payloads
+      }
+
+      File.write(output_path, JSON.pretty_generate(json_data))
+
+      puts "Saved #{issues.length} issue payloads to: #{output_path}"
+
+      puts "\nIssue preview:"
+      issues.first(3).each do |issue|
+        print_issue_summary(issue, repo, site)
+      end
+
+      if issues.length > 3
+        puts "... and #{issues.length - 3} more issues"
+        puts "------\n"
+      end
+
+      # Add project summary
+      if repo
+        project_term = site.field_mappings[:project_name] || 'project'
+        puts "JSON contains #{issues.length} issue payloads for #{project_term}: #{repo}"
+      end
+    end
+
+    def build_dry_run_site
+      site_options = { token: 'dry-run-token' }
+      site_options[:token_env_var] = options[:tokenv] if options[:tokenv]
+      Issuer::Sites::Factory.create('github', **site_options)
     end
 
     def print_summary valid_count, invalid_count, dry_run
@@ -228,7 +293,7 @@ module Issuer
         puts "\n✅ Completed: #{valid_count} issues processed, #{invalid_count} skipped"
         # Note: Run ID is already displayed in the main flow, no need to repeat it here
       end
-      
+
     end
 
     def print_issue_summary issue, repo, site

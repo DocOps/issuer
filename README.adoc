@@ -1,9 +1,9 @@
 = Issuer: Bulk GitHub Issue Creator
 :toc: macro
 :toclevels: 3
-:this_prod_vrsn: 0.2.1
-:next_prod_vrsn: 0.3.0
-:docker_base_command: docker run -it --rm -v $(pwd):/workdir -e ISSUER_API_TOKEN=$GITHUB_TOKEN docopslab/issuer
+:this_prod_vrsn: 0.3.0
+:next_prod_vrsn: 0.4.0
+:docker_base_command: docker run -it --rm --user $(id -u):$(id -g) -v $(pwd):/workdir -e ISSUER_API_TOKEN=$GITHUB_TOKEN docopslab/issuer
 :append_or_impose: Prepend items with `+` to indicate they should be appended to existing labels. Items without `+` will only be used for issues with no `tags` designated.
 ifdef::env-github[]
 :icons: font
@@ -15,6 +15,8 @@ ifdef::env-github[]
 endif::[]
 
 
+// tag::ai-prompt[]
+[[overview]]
 == Overview
 
 _Issuer_ lets you define all your GitHub Issues work tickets in one place as YAML, apply defaults, and post them to GitHub Issues in bulk.
@@ -28,6 +30,8 @@ _Issuer_ lets you define all your GitHub Issues work tickets in one place as YAM
 * *Environment variable support* for authentication
 * *Issue validation* with helpful error messages
 * *GitHub API integration*
+
+// end::ai-prompt[]
 
 Future plans include extending this capability to *Jira* (link:https://github.com/DocOps/issuer/issues/9[#9]), *GitLab* Issues (link:https://github.com/DocOps/issuer/issues/33[#33]), GitHub *Projects*, and other services.
 
@@ -92,15 +96,18 @@ See <<usage>> for more.
 ==== Alias the Docker Command
 
 Optionally alias the base Docker command.
-In your shell configuration (usually `~/.bashrc` or `~/.zshrc), add the following:
+In your shell configuration (usually `~/.bashrc` or `~/.zshrc`), add the following:
 
 [.prompt,subs=+attributes]
  alias issuer='{docker_base_command}'
 
 Reload your shell configuration for the alias to take effect:
 
-[.prompt]
- source ~/.bashrc
+....
+source ~/.bashrc
+# or
+source ~/.zshrc
+....
 
 === For Ruby Users
 
@@ -151,6 +158,7 @@ For Ruby Bundler usage, prepend `bundle exec ` and for un-aliased Docker usage, 
 [.prompt]
  issuer example.yml
 
+// tag::user-agent-prompt[]
 [[imyml-format]]
 === IMYML File Format
 
@@ -329,8 +337,8 @@ Whether to treat the issue as a stub entry, meaning prepend any `$meta.defaults.
 
 A source IMYML file is required and can be specified in two ways:
 
-* *Positional argument* (most common): Place the file path immediately after `issuer`
-* *Named option*: Use the `--file` option flag to specify the file path
+* *Positional argument* (most common). Place the file path immediately after `issuer`
+* *Named option.* Use the `--file` option flag to specify the file path
 
 Examples:
 
@@ -367,6 +375,11 @@ Whether to treat all issues as stubs, meaning prepend any `$meta.defaults.head` 
 --dry, --dry-run::
 Dry-run: print actions but do not post to GitHub.
 
+--json [_FILE_PATH_]::
+Save GitHub API issue payload as JSON file.
+Use `--dry` if you want to skip posting while generating JSON. 
+If no `FILE_PATH` is specified, saves to time-stamped file in `_payloads/` directory.
+
 --auto-versions, --auto-milestones::
 Automatically create missing milestones/versions without prompting for confirmation.
 
@@ -381,6 +394,8 @@ Prints the usage screen.
 
 --version::
 Prints the version of `issuer`.
+
+// end::user-ai-prompt[]
 
 [[authentication]]
 === Authentication
@@ -423,9 +438,10 @@ Issuer automatically logs all API operations for tracking and potential cleanup.
 
 By default, logs are stored in a user-wide directory:
 
-* *Linux/macOS*: `~/.config/issuer/logs/`
-* *With XDG Base Directory*: `$XDG_CONFIG_HOME/issuer/logs/`
-* *Custom location*: Set `ISSUER_CONFIG_DIR` environment variable
+[horizontal]
+Linux/macOS:: `~/.config/issuer/logs/`
+With XDG Base Directory:: `$XDG_CONFIG_HOME/issuer/logs/`
+Custom location:: Set `ISSUER_CONFIG_DIR` environment variable
 
 Example:
 [source,bash]
@@ -491,6 +507,8 @@ In the end, the only thing that is mainly untouched by me are the rspec tests, w
 This also explains why the terminal output contains emojis.
 I will probably make those togglable or configurable in the future.
 
+// tag::dev-ai-prompt[]
+[[tests]]
 === Tests
 
 The `specs/` directory contains all specifications, requirements, and tests for the Issuer CLI tool.
@@ -535,10 +553,10 @@ bundle exec rspec --pattern "*ops*"
 
 The `pr_test` task runs the exact same tests that GitHub Actions runs for pull requests:
 
-* *RSpec Tests*: All unit tests (`bundle exec rake spec`)
-* *CLI Tests*: Command-line interface functionality tests
-* *YAML Validation*: Validates all example YAML files
-* *Documentation Quality*: Vale linting on all documentation files
+RSpec Tests:: All unit tests (`bundle exec rake spec`)
+CLI Tests:: Command-line interface functionality tests
+YAML Validation:: Validates all example YAML files
+Documentation Quality:: Vale linting on all documentation files
 
 This ensures you can validate your changes locally before pushing to GitHub.
 
@@ -597,39 +615,36 @@ The API reference includes:
 
 This documentation is automatically updated with each gem release.
 
+// end::dev-ai-prompt[]
+
+[[release-history-management]]
 === Release History Management
 
-As of version 0.2.0, the Release Notes and Changelog are generated using the _ReleaseHx_ tool, which is still in pre-release.
-You can find the release history assets in the `docs/releasehx/` directory, which contains a configuration file and the 0.2.0 "`RHYML`" file that was auto-modified and then manually edited to produce the GitHub link:https://github.com/DocOps/issuer/releases[release announcement].
-
-ReleaseHx will be available soon, but for now the following is only usable by DocOps Lab.
-
-. Add local releasehx gem to `Gemfile`:
-+
-[source,ruby]
-gem 'releasehx', path: '../releasehx'
+As of version 0.2.0, Release Notes and Changelog are generated using the link:https://github.com/DocOps/releasehx[_ReleaseHx_] tool.
+You can find the release history assets in the `docs/releases/` directory, while the ReleaseHx configuration lives at `.config/releasehx.yml`.
+The RHYML files are auto-generated and then manually edited to produce the GitHub link:https://github.com/DocOps/issuer/releases[release announcements].
 
 . Draft RHYML draft file from the online GitHub Issues for the given version:
 +
 [.prompt,subs=+attributes]
- ./releasehx-install.sh && bundle exec rhx {this_prod_vrsn} --yaml docs/releasehx/release-{this_prod_vrsn}.yml --config docs/releasehx/config.yml
-+
-The `releasehx-install.sh` ensures ReleaseHx is up to date.
+ bundle exec rhx {this_prod_vrsn} --yaml docs/releases/{this_prod_vrsn}.yml --config .config/releasehx.yml
 
 . Manually edit the RHYML draft file.
 
 . Generate the release history as Markdown.
 +
 [.prompt,subs=+attributes]
- bundle exec rhx docs/releasehx/release-{this_prod_vrsn}.yml --md docs/releasehx/{this_prod_vrsn}.md --config docs/releasehx/config.yml
+ bundle exec rhx docs/releases/{this_prod_vrsn}.yml --md docs/releases/{this_prod_vrsn}.md --config .config/releasehx.yml
 
-. Copy and paste the contents of `docs/releasehx/{this_prod_vrsn}.md` into the GitHub release form at https://github.com/DocOps/issuer/releases/new.
+. Copy and paste the contents of `docs/releases/{this_prod_vrsn}.md` into the GitHub release form at https://github.com/DocOps/issuer/releases/new.
 
 [[contributing]]
 === Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/DocOps/issuer.
 
+
+[[legal]]
 == Legal
 
 The gem is available as open source under the terms of the MIT License.

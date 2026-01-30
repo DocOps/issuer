@@ -56,7 +56,7 @@ module Issuer
             params[:assignee] = issue_params[:assignee].strip
           end
 
-          # Handle milestone - only if milestone exists
+          # Handle milestone; only if milestone exists
           if issue_params[:milestone]
             milestone = find_milestone(repo, issue_params[:milestone])
             params[:milestone] = milestone.number if milestone
@@ -259,7 +259,7 @@ module Issuer
         def resolve_label_ids repo, label_names
           # For now, we'll skip complex label ID resolution
           # GitHub GraphQL API requires label IDs, but REST API uses names
-          # This is a simplification - in practice, you'd need to fetch and match labels
+          # This is a simplification; in practice, you'd need to fetch and match labels
           []
         end
 

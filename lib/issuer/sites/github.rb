@@ -77,7 +77,7 @@ module Issuer
           params[:assignee] = issue_params[:assignee].strip
         end
 
-        # Handle milestone - only if milestone exists
+        # Handle milestone; only if milestone exists
         if issue_params[:milestone]
           # If milestone is already a number (from convert_issue_to_site_params), use it directly
           if issue_params[:milestone].is_a?(Integer)

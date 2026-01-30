@@ -49,7 +49,7 @@ Test any example with a dry run:
 
 Or with the Docker image:
 
- docker run -it --rm -v $(pwd):/workdir docopslab/issuer issuer examples/basic-example.yml --dry
+ docker run -it --rm --user $(id -u):$(id -g) -v $(pwd):/workdir docopslab/issuer issuer examples/basic-example.yml --dry
 
 == Creating Your Own
 

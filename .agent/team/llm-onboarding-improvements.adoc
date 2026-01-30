@@ -1,0 +1,360 @@
+= LLM Onboarding Improvements for Issuer
+:toc: macro
+:toclevels: 3
+
+[horizontal]
+Mission:: Sub-mission for ReleaseHx 0.1.2 release
+Agent Role:: Product Engineer + Technical Writer
+Date:: 2026-01-24
+Status:: Completed
+
+toc::[]
+
+== Executive Summary
+
+After learning Issuer to create GitHub issues for ReleaseHx 0.1.2 patch release, I documented observations about the tool's LLM-friendliness and propose specific improvements to make Issuer more accessible to AI agents.
+
+*Key Finding:* Issuer's documentation is comprehensive but could benefit from restructuring specifically for LLM consumption, with clearer hierarchies, machine-readable schemas, and quick-reference patterns.
+
+== What Worked Well
+
+=== Comprehensive README.adoc
+
+The README is thorough and well-structured with:
+
+* Clear feature list up front
+* Installation instructions for both Ruby and Docker users
+* Extensive CLI usage documentation
+* IMYML format specification with property reference
+
+=== Rich Example Files
+
+The `examples/` directory provides excellent learning material:
+
+* `basic-example.yml` - Simple, clear demonstration
+* `advanced-stub-example.yml` - Shows sophisticated features (stub processing, tag prefixes)
+* Multiple examples covering different use cases
+
+=== AsciiDoc Tagged Sections
+
+The use of `// tag::ai-prompt[]` markers shows awareness of AI agent needs and makes it easier to extract relevant sections.
+
+=== Dry-Run Mode
+
+The `--dry` flag is invaluable for validation without API calls - perfect for LLM testing and learning.
+
+=== Clear Property Naming
+
+Despite being abbreviated (summ, vrsn, user, tags), the property names are intuitive enough when seen in context.
+
+== What Was Confusing or Required Extra Effort
+
+=== IMYML Format Discovery
+
+*Issue:* The IMYML format specification is embedded deep in the README (lines 160-350). An LLM agent needs to scroll through installation and usage sections first.
+
+*Impact:* Required reading ~500 lines of documentation before understanding the core data format.
+
+*What I Did:* Read README sequentially, then jumped to examples to understand format through demonstration.
+
+=== Property Reference Buried
+
+*Issue:* The `[[imyml-ref]]` section with complete property documentation starts at line 233, after the format examples.
+
+*Impact:* Had to read examples first, then circle back to understand all available properties.
+
+=== No Machine-Readable Schema
+
+*Issue:* No JSON Schema, SGYML, or other machine-readable format definition.
+
+*Impact:* LLMs must parse AsciiDoc prose to understand validation rules, types, and constraints.
+
+=== Tag Prefix Logic Not Immediately Clear
+
+*Issue:* The `+` and `-` prefix notation for tags is powerful but requires careful reading to understand:
+
+* Regular tags: `[bug, docs]`
+* Append tags: `[+urgent]` 
+* Removal tags: `[-needs:docs]`
+
+*Impact:* Could easily misunderstand and create invalid IMYML files.
+
+=== Authentication Setup
+
+*Issue:* Authentication section is late in README (line 410+), after CLI usage.
+
+*Impact:* An agent might try to execute without realizing authentication is required.
+
+=== Type Property Constraint
+
+*Issue:* The `type` property "must already be registered" but there's no clear guidance on what types are available or how to check.
+
+*Impact:* Uncertainty about valid values for the `type` field.
+
+== Top Priority Documentation Improvements
+
+=== Create AI Agent Quick Start Section ⭐⭐⭐
+
+*Location:* Add near top of README after Overview
+
+*Proposed Content:*
+
+[source,asciidoc]
+----
+[[ai-agent-quickstart]]
+=== Quick Start for AI Agents
+
+For LLM agents learning to use Issuer:
+
+. *Core Concept:* IMYML (Issue Management YAML) format defines issues in YAML, Issuer posts them to GitHub
+. *Required Reading Order:*
+   - <<imyml-format,IMYML Format>> - Understand the data structure
+   - <<imyml-ref,Property Reference>> - Complete field documentation
+   - <<cli-usage,CLI Usage>> - Command-line options
+   - <<authentication,Authentication>> - Token setup
+. *Examples:* Study `examples/basic-example.yml` and `examples/advanced-stub-example.yml`
+. *Testing:* Always use `--dry` flag first to validate without posting
+. *Authentication:* Set `ISSUER_API_TOKEN` environment variable before posting
+
+*Minimal Valid IMYML:*
+
+[source,yaml]
+----
+$meta:
+  proj: org/repo
+issues:
+  - summ: Issue title here
+----
+
+=== Create IMYML Cheat Sheet ⭐⭐⭐
+
+*Location:* New file `docs/IMYML-REFERENCE.adoc` (or section in README): Issue title
+
+
+== Complete Template
+
+[source,yaml]
+----
+$meta:
+  proj: org/repo              # Required: org/repo or user/repo
+  defaults:
+    vrsn: 1.0.0              # String: milestone/version
+    user: username            # String: GitHub username
+    type: Task                # String: must exist in repo
+    tags: [label1, +append]  # Array: see tag logic below
+    stub: false               # Boolean: enable stub processing
+    body: Default text        # String: default body text
+    head: Header text         # String: prepend when stub=true
+    tail: Footer text         # String: append when stub=true
+
+issues:                        # Array: list of issue records
+  - summ: Title               # Required: one-line summary
+    body: Description         # String: full description
+    type: Bug                 # String: issue type
+    vrsn: 2.0.0              # String: milestone
+    user: assignee            # String: GitHub username
+    tags: [label, +add]       # Array: see tag logic
+    stub: false               # Boolean: override default
+----
+
+== Tag Logic Rules
+
+* Regular tags: `[bug, docs]` - Applied based on default logic
+* Append tags: `[+urgent]` - Always added to all issues
+* Removal tags: `[-needs:docs]` - Remove from defaults
+* Can combine: `[feature, +critical, -auto]`
+
+== Property Types
+
+summ:: String (required) - Issue title
+body:: String (optional) - Issue description (Markdown formatted)
+type:: String (optional) - Must already exist in target repo
+vrsn:: String (optional) - Milestone name (auto-created if missing)
+user:: String (optional) - GitHub username for assignee
+tags:: Array[String] (optional) - Labels with prefix notation
+stub:: Boolean (optional) - Enable header/footer injection
+----
+
+=== Add Machine-Readable Schema ⭐⭐
+
+*Location:* New file `schemas/imyml-schema.json` or `schemas/imyml-schema.sgyml`
+
+*Benefit:* Allows LLMs to validate IMYML structure programmatically without parsing prose.
+
+*Consider:* Since SchemaGraphy exists in the DocOps Lab ecosystem, use SGYML format for the schema definition.
+
+=== Reorganize README Sections ⭐⭐
+
+*Proposed New Order:*
+
+. Overview (keep as-is)
+. *AI Agent Quick Start* (NEW)
+. *IMYML Format* (move up from line 160)
+. *IMYML Property Reference* (keep with format section)
+. *Examples* (link to examples/ directory)
+. Installation (keep as-is)
+. Authentication (move up before CLI usage)
+. CLI Usage (after auth)
+. Advanced Usage (keep as-is)
+. Development (keep as-is)
+
+*Rationale:* Put the data format first so agents understand what they're creating before learning how to execute.
+
+=== Expand Type Property Documentation ⭐
+
+*Location:* In IMYML Reference section
+
+*Add:*
+
+[source,asciidoc]
+----
+type:::
+(String)
+The type of issue, which must already be registered in the target project or repository.
++
+Common GitHub issue types include: `Bug`, `Feature`, `Task`, `Enhancement`, `Question`, `Documentation`.
+
+[NOTE]
+Issue types vary by repository. Check the target repository's issue type configuration before using this field. If a type doesn't exist, issue creation will fail.
+
+[TIP]
+Use `--dry` mode to test without posting, then check GitHub repo settings for available types if validation fails.
+----
+
+== Additional Improvement Ideas
+
+=== Inline Examples in Property Reference
+
+*Enhancement:* Add mini-examples next to each property definition.
+
+*Example:*
+
+[source,asciidoc]
+----
+tags:::
+(Array of Strings)
+Labels to apply to the issue.
++
+.Example
+[source,yaml]
+----
+tags: [bug, priority:high, +urgent, -needs:review]
+----
++
+Supports prefix notation:
++
+* `bug` - regular label
+* `+urgent` - append to all issues
+* `-needs:review` - remove from defaults
+
+=== Visual Hierarchy Markers
+
+*Enhancement:* Use consistent AsciiDoc markers for LLM parsing:
+
+* `[[property-name]]` anchors for all properties
+* `[.required]` and `[.optional]` role markers
+* `[.example]` markers for code blocks
+
+=== Create docs/agent/ Directory
+
+*Proposed Structure:*
+
+....
+docs/
+├── agent/
+│   ├── README.adoc              # AI agent overview
+│   ├── quickstart.adoc          # Fast onboarding
+│   ├── imyml-reference.adoc     # Complete property docs
+│   ├── common-patterns.adoc     # Recipe-style examples
+│   └── troubleshooting.adoc     # FAQ and error handling
+└── schemas/
+    └── imyml-schema.sgyml       # Machine-readable schema
+....
+
+=== Error Message Improvements
+
+*Enhancement:* When validation fails, suggest solutions:
+
+....
+Error: Unknown type 'Improvement'
+Available types in DocOps/releasehx: Bug, Feature, Task, Enhancement
+Tip: Use --dry mode to validate before posting
+....
+
+=== Authentication Quick Check Command
+
+*Enhancement:* Add a test command:
+
+....
+issuer --test-auth
+# Output:
+# ✓ GitHub token found (ISSUER_API_TOKEN)
+# ✓ Successfully authenticated as: briandominick
+# ✓ API rate limit: 4,987/5,000 remaining
+....
+
+== Mission-Specific Observations
+
+=== What I Learned About Issuer
+
+IMYML is intuitive once understood:: The abbreviated property names (summ, vrsn, user, tags) are actually helpful for conciseness
+
+Dry-run is essential: Perfect safety mechanism for validation
+
+Tag prefix logic is powerful:: The `+`/`-` notation is elegant for label management
+
+Stub functionality is sophisticated:: head/body/tail system is well-designed for template-based issue creation
+
+Docker-first approach is smart:: Lowers barrier to entry for non-Ruby users
+
+=== Blockers Encountered
+
+Need to run from issuer directory::
+Had to execute from `/home/brian/Documents/work/issuer/` since issuer wasn't in releasehx bundle
+
+Type property uncertainty::
+Not sure if "Bug" and "Task" are valid without checking GitHub repo
+
+=== Successful Outcomes
+
+* ✅ Created valid IMYML file on first attempt after reading docs
+* ✅ Dry-run passed validation
+* ✅ Two issues correctly structured with all metadata
+* ✅ Ready for actual posting (awaiting Operator approval)
+
+== Recommendations for Implementation
+
+=== Immediate Actions (High ROI, Low Effort)
+
+. *Add AI Agent Quick Start section* to README (30 minutes)
+. *Move IMYML format section up* in README (15 minutes)
+. *Move Authentication before CLI Usage* (5 minutes)
+. *Add inline examples to Property Reference* (1 hour)
+
+=== Short-Term Actions (High ROI, Medium Effort)
+
+[start=5]
+. *Create IMYML Quick Reference cheat sheet* (2 hours)
+. *Create docs/ai-agents/ directory structure* (4 hours)
+. *Expand type property documentation* (30 minutes)
+
+=== Long-Term Actions (High ROI, High Effort)
+
+[start=8]
+. *Create machine-readable schema* (SGYML format) (8 hours)
+. *Implement --test-auth command* (4 hours)
+. *Enhance error messages with suggestions* (ongoing)
+
+== Conclusion
+
+Issuer is already well-documented and functional. The proposed improvements focus on *restructuring and augmenting existing documentation* rather than changing core functionality.
+
+Key Insight::
+LLM agents benefit most from:
++
+* *Hierarchical navigation* (quick start → detailed reference)
+* *Format-first documentation* (show IMYML before CLI)
+* *Machine-readable schemas* (programmatic validation)
+* *Inline examples* (see-and-understand patterns)
+
+These improvements would make Issuer significantly more accessible to AI agents while also benefiting human users through clearer documentation structure.

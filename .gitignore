@@ -61,7 +61,7 @@ comprehensive-test.yml
 .ruby-gemset
 
 # Bundler
-/Gemfile.lock.example
+./Gemfile.lock
 /.bundle
 
 # Documentation
@@ -98,8 +98,13 @@ specs/data/*-issues.yml
 
 # Local scratch space for AI output
 .warp/
+.agent/*
+# DO track team-shared files
+!.agent/team/
 
 # Docs and ReleaseHx files
-docs/releasehx/*.md
-docs/releasehx/*.adoc
+docs/releases/*.md
 releasehx-install.sh
+# DocOps Lab vendor files
+scripts/.vendor/
+.config/.vendor/

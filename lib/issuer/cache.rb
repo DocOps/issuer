@@ -142,7 +142,7 @@ module Issuer
       elsif summary_section.key?(counter_key)
         summary_section[counter_key] += 1
       else
-        # Fallback - create the key as string
+        # Fallback; create the key as string
         summary_section[counter_key] = 1
       end
 
