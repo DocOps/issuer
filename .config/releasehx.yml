@@ -79,12 +79,6 @@ tags:
   _include: ['needs:note', 'changelog', 'breaking', 'deprecation']
   _exclude: ['internal', 'wontfix', 'duplicate']
   
-  needs:note:
-    head: Release Notes Needed
-    icon: pencil
-    text: Requires release note
-    drop: true
-  
   breaking:
     head: Breaking Changes
     icon: exclamation-triangle
