@@ -1,0 +1,371 @@
+= Advanced IMYML: Distributed Task Management Specification
+:toc: macro
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:version: 0.1.0-draft
+
+
+== Overview
+
+This document outlines an enhanced Issue Management YAML-based Modeling Format (IMYML) designed to enable comprehensive, distributed task management using Git as the synchronization and collaboration backbone along with flat-file data sources (YAML and JSON).
+
+The Advanced IMYML format extends the current Issuer/IMYML format to support:
+
+* *Distributed task management* across teams and repositories
+* *Git-native collaboration* with intelligent merge strategies
+* *Hierarchical issue organization* with parent-child relationships
+* *Rich metadata tracking* while maintaining human readability
+* *Multi-platform integration* with GitHub, Jira, Linear, etc.
+
+toc::[]
+
+
+== Design Philosophy
+
+=== Core Principles
+
+Human-first::
+All key properties MUST be readily maintainable by humans in text editors.
+Additional tooling may _infer_ or _synthesize_ metadata, but such data should be maintained automatically and _outside_ the IMYML dataset.
+
+Git-native::
+Leverage Git for versioning, merging, and distributed collaboration.
+
+Tool-agnostic::
+Enable rich tooling without requiring automation, and stick to formats accessible by nearly all development environments.
+
+Minimal but Complete::
+Capture essential project management data without overwhelming users.
+
+Semantic Over Numeric::
+Prefer readable identifiers over auto-generated numbers.
+
+=== Boundaries
+
+User-Maintainable Content::
+Only properties that users can reasonably track and update go into the IMYML format.
+
+Automation-Free::
+No requirement for tools to automatically modify IMYML files.
+Tooling that automates edits to issue-definition files could be cool, but it is not required.
+
+External Metadata::
+Complex tracking data belongs in tooling or external systems, not in IMYML.
+
+
+== Data Model Specification
+
+For a detailed example/model of the IMYML structure, see link:examples/advanced-imyml.yaml[].
+
+For a technical schema that defines the IMYML format, see link:specs/data/advanced-imyml-schema.yml[].
+
+=== IMYML YAML Structure
+
+Advanced IMYML files maintain backward compatibility with current Issuer format while extending capabilities:
+
+```yaml
+$meta:
+  proj: org/repo
+  defaults:
+    # standard defaults plus advanced properties
+    
+issues:
+  - # enhanced issue properties
+    kids:
+      - # child issues with inheritance
+```
+
+=== The `$meta` Block
+
+IMYML files MAY contain a root-tier `$meta` block to define project-level metadata and defaults.
+
+=== Top-Level Issues Properties
+
+For easy readability, first-tier keys are _mostly_ kept to four characters, with exceptions for block-style (Map/Array) properties, which ma consist of more or fewer characters.
+
+[cols="1m,4,1", options="header"]
+|===
+| Key | Purpose | Type
+
+| summ  | Issue title/summary | String
+| body  | Issue description | String
+| slug  | Semantic identifier | String  
+| stat  | Current state | String
+| flag  | Priority level | String
+| type  | Issue type | String
+| tags  | Labels/categories | Array
+| user  | Primary assignee | String
+| users | Multi-user assignments | Map
+| vrsn  | Target version/milestone | String
+| versions | Span of affected versions | Range
+| part  | Component/module | String
+| deps  | Dependencies | Array
+| refs  | Related references | Array  
+| epic  | Parent theme/epic | String
+| work  | Effort tracking | Map
+| kids  | Child issues | Array
+| docs  | Documentation block | Map
+| talk  | Discussion threading | Array
+| git   | Source control integration | Map
+| due   | Due date | Date
+| qa    | Quality gates | Map
+|===
+
+=== Secondary Properties (Semantic Keys)
+
+Within Maps and Arrays, use semantically appropriate keys (without the constraint of 4-character limits):
+
+`users.review`:: Code reviewers (Array of Strings)
+`users.consult`:: Subject matter experts (Array of Strings)
+`users.watch`:: Stakeholders wanting updates (Array of Strings)
+`work.size`:: Story points/complexity (Integer)
+`work.estimate`:: Time estimate (String, ex: `2d`, `3h`)
+`work.remaining`:: Remaining effort (String, ex: `1d`, `2h`)
+`docs.note`:: Release note draft (String)
+`docs.summ`:: Changelog summary (String)
+`docs.refs`:: Relevant documentation URL (Array of Strings (Paths))
+`qa.test`:: Acceptance criteria (Array of Strings)
+`qa.review`:: Code review status (String, `pending`, `approved`)
+`qa.security`:: Security review status (String, `pending`, `approved`)
+`git.branch`:: Associated Git branch (String)
+`git.merge`:: Relevant commit SHA (String)
+`git.pr`:: Pull request URL or ID (String or Integer)
+`git.repo`:: Target repository (String, must be registered)
+
+=== Organization
+
+Issues and their properties are correlated through hierarchichal/nested or linked relationsips.
+
+==== Child Issues (`kids`)
+
+Child issues inherit parent context but can override any property:
+
+Inherit:: `user`, `part`, `vrsn`, `epic` +
+(No need to express these in the YAML.)
+Override:: Any property can be explicitly set
+Reference:: Can reference siblings by `slug`
+
+=== Talk Objects and Replies
+
+`talk`:: Array of discussion threads.
+Each comment has:
+`user`::: Author of the comment
+`body`::: Comment text
+
+==== Simplified Talk Object Form
+
+For convenience, brief/simple talk items can take the form of `- <username>: <comment>`.
+For examples:
+
+```yaml
+talk:
+  - alice: Let me know what you think.
+  - bob: I'm worried this duplicates some of <<other-issue-item-slug>>.
+  - alice: @bob noted, will join there.
+```
+
+=== Cross-issue References
+
+Dependencies (`deps`):: Issues that would block this issue
+References (`refs`):: Related but non-blocking items
+Epic (`epic`):: Parent theme or initiative
+
+=== State/Mode Management
+
+==== Issue States (`stat`)
+
+Issues progress through defined states:
+
+`open`:: Initial state, ready for work
+`draft`:: Work in progress, not ready for review
+`ongoing`:: Active development
+`review`:: Under review/testing
+`blocked`:: Cannot proceed due to external factors
+`done`:: Work completed, pending closure
+`closed`:: Archived or dismissed
+
+These progress statuses are only a suggested default series.
+Issue states MUST be user-configurable.
+
+==== Priority Levels (`flag`)
+
+`low`:: Nice to have, no urgency
+`medium`:: Standard priority
+`high`:: Important, should be prioritized
+`critical`:: Urgent, requires immediate attention
+`wontfix`:: Dismissed as N/A or unfeasible
+
+These priority levels are only a suggested default set.
+Priority levels MUST be user-configurable.
+
+
+== Integration Requirements
+
+Any sensible implementation of IMYML will aid Git operations.
+
+=== Git Integration
+
+IMYML file management is best handled in its own Git repository to encourage frequent, clean commits and merges.
+This is especially true for multi-repo projects, of course.
+
+[NOTE]
+IMYML only requires Git for _collaboration_.
+It can be used without Git as long as only one author is handling a given IMYML file.
+
+Minimally compliant tools MUST:
+
+. *Preserve Git history* for all IMYML changes
+. Apply *smart merge strategies* for concurrent modifications
+. Provide *conflict-resolution* help for YAML-aware merging
+. *Branch correlation* with `git.branch` properties in IMYML issue entries
+
+Advanced tools MAY:
+
+. *Auto-sync* with external issue trackers
+. *Generate reports* and visualizations from IMYML data
+. *Enforce validation* rules on save or commit
+. *Sync with Git branches* for active change tracking
+
+=== Conflict Resolution
+
+When multiple users edit the same IMYML file:
+
+Additive merging:: for arrays (`tags`, `kids`, `talk`)
+Last-writer-wins:: for scalar values with audit trail
+Timestamp ordering:: for discussion threads
+Interactive resolution:: for semantic conflicts
+
+
+== Proposed Issuer 2.0 Tooling
+
+The following is a proposal for Issuer 2.0 CLI capabilities to support the Advanced IMYML format.
+
+[NOTE]
+This section will be removed from the IMYML Standard Specification and used to define the changes to the Issuer app itself.
+For now it is here to be convenient and illustrative.
+
+=== Core CLI Capabilities
+
+==== Basic Operations
+
+`create`:: Create new issues
+`update`:: Modify existing issues  
+`query`:: Search and filter issues
+`status`:: Show project status overview
+
+==== Advanced Features
+
+`sync`:: Synchronize with external systems
+`merge`:: Intelligent YAML merging
+`report`:: Generate status reports and visualizations
+`validate`:: Check IMYML syntax and semantics
+
+==== Repository Management
+
+`init`:: Initialize IMYML in a project
+`config`:: Manage global and project configuration
+`history`:: View issue change history
+
+=== Configuration System
+
+==== Global Configuration (`~/.config/imyml/config.yml`)
+
+```yaml
+defaults:
+  user: username
+  editor: vim
+  sync_targets: [github]
+  
+github:
+  token_env: GITHUB_TOKEN
+  default_repo: user/default-repo
+```
+
+==== Project Configuration (`.imyml/config.yml`)
+
+```yaml
+project:
+  name: "My Project"
+  components: [frontend, backend, api, docs]
+  
+workflows:
+  default_states: [open, ongoing, review, done, closed]
+  required_reviews: [security]
+```
+
+=== External Storage
+
+Issuer will support external metadata storage in `.imyml/`:
+
+`history.json`:: Change audit log
+`cache.json`:: Tool-specific caching
+`sync.yml`:: External system mapping
+`metrics.json`:: Analytics and reporting data
+
+=== Validation Rules
+
+==== Required Properties
+
+. Every issue must have `summ` (title)
+. `slug` must be unique within the file
+. `stat` must be valid state/status value
+. `flag` must be valid priority value
+
+==== Semantic Validation
+
+. `deps` references must exist (within file or external)
+. `user` and `users.*` must be valid identifiers
+. `due` dates must be valid ISO dates
+. `kids` cannot reference their parent
+
+==== Cross-Reference Integrity
+
+Tools should validate:
+
+. Dependency cycles
+. Orphaned references
+. Consistent state transitions
+. User assignment validity
+
+=== Future Considerations
+
+==== Planned Enhancements
+
+Multi-file projects::
+Split large projects across multiple IMYML files using SGYML or JSON Query references.
+
+Cross-project dependencies:: 
+Reference issues in other repositories
+
+Rich formatting::
+Enhanced markdown support in `body` and `docs`
+
+Workflow automation::
+Trigger actions based on state changes
+
+Integration ecosystem::
+Plugin architecture for custom integrations
+
+==== Research Areas
+
+Distributed consensus::
+Handling conflicting updates across repositories
+
+Performance optimization::
+Efficient processing of large IMYML files
+
+Schema evolution::
+Backward-compatible format versioning
+
+Security considerations::
+Access control and sensitive data handling
+
+
+== Contributing
+
+This specification is open for community input and evolution.
+The goal is to create a universal, Git-native task management format that serves teams of all sizes while maintaining the simplicity that makes IMYML appealing.
+
+[IMPORTANT]
+This document represents a draft proposal and is subject to change based on community feedback and implementation experience.
